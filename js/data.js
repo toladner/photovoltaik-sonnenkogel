@@ -51,10 +51,10 @@ async function getData(type, requestDay) {
             DATA[types[i]][requestMonth] = {available: false};
         }
         // retrieve data
-        rawData = await retrieveDataDach(requestMonth);
+        const rawData = await retrieveDataDach(requestMonth);
         // store retrieved data in DATA
         for (let i = 0; i < types.length; i++) {
-            entries = rawData[types[i]]
+            const entries = rawData[types[i]]
             Object.keys(entries).forEach((key) => DATA[types[i]][key] = {value: entries[key]})
             DATA[types[i]][requestMonth] = {available: true};
         }
@@ -65,7 +65,9 @@ async function getData(type, requestDay) {
 }
 
 async function retrieveDataBalkon(requestDay) {
+    // init
     const credentials = await getCredentials()
+    const statusId = updateStatus(`Load data ${requestDay}..`)
 
     const response = await fetch("https://neapi.hoymiles.com/pvm-report/api/0/station/report/select_power_by_station", {
         method: "POST",
@@ -83,17 +85,21 @@ async function retrieveDataBalkon(requestDay) {
         }
     })
     const json = await response.json();
-    return json.data[0].data_list.map(element => {
+    const rawData =  json.data[0].data_list.map(element => {
         return {
             x: `${requestDay} ${element.date}`,
             y: element.pv_power
         }
     })
+
+    deleteStatus(statusId)
+    return rawData
 }
 
 async function retrieveDataDach(requestMonth) {
-    // read xml
+    // init
     const credentials = await getCredentials()
+    const statusId = updateStatus(`Load data ${requestMonth}..`)
 
     // call dns
     const responseDNS = await fetch("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
@@ -133,6 +139,7 @@ async function retrieveDataDach(requestMonth) {
         rawData["bezug"][date].push({x: T, y: parseFloat(entry.attributes["V3"].nodeValue) * 1000})
     }
 
+    deleteStatus(statusId)
     return rawData
 }
 

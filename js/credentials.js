@@ -7,6 +7,7 @@ async function getCredentials() {
 
         // get encrypted credentials
         console.log("[Credentials] Retrieving..")
+        const statusId = updateStatus("Login..")
         const response = await fetch('./js/data/credentials.encrypted');
         const encryptedCreds = await response.text();
 
@@ -46,6 +47,7 @@ async function getCredentials() {
 
         // finish
         credentials.available = true;
+        deleteStatus(statusId)
         console.log(`[Credentials] Initialized.`)
     }
 
