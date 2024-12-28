@@ -43,6 +43,8 @@ function getTimeDatasetObject(type, data) {
 }
 
 function getZoomOptions() {
+    const endOfDay = new Date();
+    endOfDay.setHours(23,59,59,999);
     return {
         zoom: {
             wheel: {
@@ -59,6 +61,9 @@ function getZoomOptions() {
         pan: {
             enabled: true,
             mode: 'x'
+        },
+        limits: {
+            x: {max: endOfDay}
         }
     }
 }
@@ -150,14 +155,13 @@ async function showTodayChart() {
                     mode: 'x',
                     intersect: false
                 },
-                zoom: getZoomOptions()
+                // zoom: getZoomOptions()
             },
             scales: {
                 x: {
                     type: 'time',
                     min: `${getDay(0)} 06:00`,
                     max: `${getDay(0)} 22:00`,
-                    ticks: {stepSize: 2},
                     time: {
                         unit: "hour",
                         displayFormats: {
