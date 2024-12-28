@@ -2,31 +2,34 @@ async function getCredentials() {
 
     // retrieve credentials if not available
     if (!("available" in credentials)) {
+        // initializing credentials
         credentials.available = false;
         console.log("[Credentials] Retrieving..")
 
-        // build paste from parameter
-        const params = new URLSearchParams(new URL(window.location.href).search);
-        const pasteid = params.get('pasteid');
-        const url = `https://pastebin.com/raw/${pasteid}`;
+        // get encrypted credentials
+        const response = await fetch('./js/data/credentials.encrypted');
+        const encryptedCreds = await response.text();
 
-        // fetch credentials
-        fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
-            .then(response => {
-                if (response.ok) return response.json()
-                throw new Error('Network response was not ok.')
-            })
-            .then(data => {
-                credentials.value = JSON.parse(data.contents)
-                credentials.available = true;
-                console.log("[Credentials] Retrieved.")
-            })
-        return
+        // read key
+        const params = new URLSearchParams(new URL(window.location.href).search);
+        const key = params.get('pasteid');
+
+        // test encryption
+        // const encryptedTemp = await CryptoJS.AES.encrypt(plain, key);
+        // console.log(encryptedTemp.toString(CryptoJS.enc.Utf8))
+
+        // decrypt credentials
+        const decryptedCreds = await CryptoJS.AES.decrypt(encryptedCreds, key);
+        const value = decryptedCreds.toString(CryptoJS.enc.Utf8)
+
+        // save credentials
+        credentials.value = JSON.parse(value);
+        credentials.available = true;
     }
 
     // wait until available
-    console.log("[Credentials] Waiting..")
     while (!credentials.available) {
+        console.log("[Credentials] Waiting..")
         await sleep(100)
     }
 
