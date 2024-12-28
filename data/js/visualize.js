@@ -16,7 +16,7 @@ function removePlaceholder(element) {
     element.classList.remove('placeholder')
 }
 
-function overwritePlaceHolder(groupId, elementId, value, unit='W') {
+function overwritePlaceHolder(groupId, elementId, value, unit='W?') {
     const element = document.querySelector(`#${groupId} #${elementId}`)
     element.innerText = (unit === "") ? `${value}` : `${value} ${unit}`
     removePlaceholder(element)
@@ -54,10 +54,11 @@ function getZoomOptions() {
             pinch: {
                 enabled: true
             },
-            mode: 'xy',
+            mode: 'x',
         },
         pan: {
-            enabled: true
+            enabled: true,
+            mode: 'x'
         }
     }
 }
@@ -112,12 +113,12 @@ async function showLiveChart() {
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
 
-    overwritePlaceHolder('liveData','dach',lastDach.y)
+    overwritePlaceHolder('liveData','dach',lastDach.y,'W')
     overwritePlaceHolder('liveData','dateDach',lastDach.x, '')
-    overwritePlaceHolder('liveData','balkon',lastBalkon.y)
+    overwritePlaceHolder('liveData','balkon',lastBalkon.y,'W')
     overwritePlaceHolder('liveData','dateBalkon',lastBalkon.x, '')
-    overwritePlaceHolder('liveData','verbrauch',lastVerbrauch.y)
-    overwritePlaceHolder('liveData','bezug',lastBezug.y)
+    overwritePlaceHolder('liveData','verbrauch',lastVerbrauch.y,'W')
+    overwritePlaceHolder('liveData','bezug',lastBezug.y,'W')
 }
 
 // Today Chart
