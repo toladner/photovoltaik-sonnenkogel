@@ -94,15 +94,15 @@ async function retrieveDataBalkon(requestDay) {
 async function retrieveDataDach(requestMonth) {
     // read xml
     const credentials = await getCredentials()
-    const headers = new Headers({
-        'Authorization': `Basic ${btoa(`${credentials.loxone.username}:${credentials.loxone.password}`)}`
-    });
 
     // call dns
     const responseDNS = await fetch("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
 
     // fetch data from real url
     const url = `${responseDNS.url}stats/18cefec1-017c-47f3-ffffed57184a04d2.${requestMonth.replace('-','')}.xml`
+    const headers = new Headers({
+        'Authorization': `Basic ${btoa(`${credentials.loxone.username}:${credentials.loxone.password}`)}`
+    });
     const response = await fetch(url, {headers: headers});
     const xmlText = await response.text()
 
