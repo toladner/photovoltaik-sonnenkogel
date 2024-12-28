@@ -67,7 +67,7 @@ async function getData(type, requestDay) {
 async function retrieveDataBalkon(requestDay) {
     // init
     const credentials = await getCredentials()
-    const statusId = updateStatus(`Load data ${requestDay}..`)
+    const statusId = updateStatus(`Loading ${requestDay}..`)
 
     const response = await fetch("https://neapi.hoymiles.com/pvm-report/api/0/station/report/select_power_by_station", {
         method: "POST",
@@ -99,7 +99,7 @@ async function retrieveDataBalkon(requestDay) {
 async function retrieveDataDach(requestMonth) {
     // init
     const credentials = await getCredentials()
-    const statusId = updateStatus(`Load data ${requestMonth}..`)
+    const statusId = updateStatus(`Loading ${requestMonth}..`)
 
     // call dns
     const responseDNS = await fetch("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
