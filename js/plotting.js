@@ -1,12 +1,13 @@
 
 // SETTINGS -------------------------------------------------------------------
 
+// Default matlab colors: https://de.mathworks.com/help/matlab/creating_plots/specify-plot-colors.html
 const plotData = {
-    dach: {name: 'Dach', color: '#4CAF50', hidden: false},
-    balkon: {name: 'Balkon', color: '#CDDC39', hidden: false},
-    verbrauch: {name: 'Verbrauch', color: '#F44336', hidden: true},
-    bezug: {name: 'Bezug', color: '#9C27B0', hidden: true},
-    alpha: '70'
+    dach: {name: 'Dach', color: '#0072BD', hidden: false},
+    balkon: {name: 'Balkon', color: '#EDB120', hidden: false},
+    verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true},
+    bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true},
+    alpha: '75'
 }
 
 // DATASET OBJECTS ------------------------------------------------------------
@@ -27,6 +28,26 @@ function getTimeDatasetObject(type, data) {
     dataset.fill = 'origin'
     dataset.hidden = plotData[type].hidden
     return dataset
+}
+
+function getZoomOptions() {
+    return {
+        zoom: {
+            wheel: {
+                enabled: true,
+            },
+            drag: {
+                enabled: false
+            },
+            pinch: {
+                enabled: true
+            },
+            mode: 'xy',
+        },
+        pan: {
+            enabled: true
+        }
+    }
 }
 
 // CHARTS ---------------------------------------------------------------------
@@ -97,7 +118,8 @@ async function showTodayChart() {
                 tooltip: {
                     mode: 'x',
                     intersect: false
-                }
+                },
+                zoom: getZoomOptions()
             },
             scales: {
                 x: {
@@ -163,7 +185,8 @@ async function showWeekChart() {
                 tooltip: {
                     mode: 'x',
                     intersect: false
-                }
+                },
+                zoom: getZoomOptions()
             },
             scales: {
                 x: {

@@ -31,6 +31,4 @@ function deleteStatus(id) {
             updateStatus(statusManager.queuedIds[nextId], nextId)
         }
     }
-
-    console.log(statusManager)
 }
