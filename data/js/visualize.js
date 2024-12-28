@@ -1,4 +1,3 @@
-
 // SETTINGS -------------------------------------------------------------------
 
 // Default matlab colors: https://de.mathworks.com/help/matlab/creating_plots/specify-plot-colors.html
@@ -16,7 +15,7 @@ function removePlaceholder(element) {
     element.classList.remove('placeholder')
 }
 
-function overwritePlaceHolder(groupId, elementId, value, unit='W?') {
+function overwritePlaceHolder(groupId, elementId, value, unit = 'W?') {
     const element = document.querySelector(`#${groupId} #${elementId}`)
     element.innerText = (unit === "") ? `${value}` : `${value} ${unit}`
     removePlaceholder(element)
@@ -36,7 +35,7 @@ function getBasicDatasetObject(type, data) {
 }
 
 function getTimeDatasetObject(type, data) {
-    const dataset = getBasicDatasetObject(type,data)
+    const dataset = getBasicDatasetObject(type, data)
     dataset.fill = 'origin'
     dataset.hidden = plotData[type].hidden
     return dataset
@@ -44,7 +43,7 @@ function getTimeDatasetObject(type, data) {
 
 function getZoomOptions() {
     const endOfDay = new Date();
-    endOfDay.setHours(23,59,59,999);
+    endOfDay.setHours(23, 59, 59, 999);
     return {
         zoom: {
             wheel: {
@@ -72,6 +71,7 @@ function getZoomOptions() {
 
 // Live Chart
 async function showLiveChart() {
+    logSection('[CHART] Showing Live..')
 
     lastData = await Promise.all([
         getLastData('dach'),
@@ -90,8 +90,8 @@ async function showLiveChart() {
         datasets: [
             getBasicDatasetObject('dach', [lastDach.y, 0, 0]),
             getBasicDatasetObject('balkon', [lastBalkon.y, 0, 0]),
-            getBasicDatasetObject('verbrauch', [0,lastVerbrauch.y, 0]),
-            getBasicDatasetObject('bezug', [0,0,lastBezug.y]),
+            getBasicDatasetObject('verbrauch', [0, lastVerbrauch.y, 0]),
+            getBasicDatasetObject('bezug', [0, 0, lastBezug.y]),
         ]
     };
     const chartId = 'liveChart';
@@ -118,17 +118,18 @@ async function showLiveChart() {
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
 
-    overwritePlaceHolder('liveData','dach',lastDach.y,'W')
-    overwritePlaceHolder('liveData','dateDach',lastDach.x, '')
-    overwritePlaceHolder('liveData','balkon',lastBalkon.y,'W')
-    overwritePlaceHolder('liveData','dateBalkon',lastBalkon.x, '')
-    overwritePlaceHolder('liveData','verbrauch',lastVerbrauch.y,'W')
-    overwritePlaceHolder('liveData','bezug',lastBezug.y,'W')
+    overwritePlaceHolder('liveData', 'dach', lastDach.y, 'W')
+    overwritePlaceHolder('liveData', 'dateDach', lastDach.x, '')
+    overwritePlaceHolder('liveData', 'balkon', lastBalkon.y, 'W')
+    overwritePlaceHolder('liveData', 'dateBalkon', lastBalkon.x, '')
+    overwritePlaceHolder('liveData', 'verbrauch', lastVerbrauch.y, 'W')
+    overwritePlaceHolder('liveData', 'bezug', lastBezug.y, 'W')
 }
 
 // Today Chart
 async function showTodayChart() {
-    const types = ['balkon', 'dach','verbrauch','bezug']
+    logSection('[CHART] Showing Today..')
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug']
 
     const data = {
         labels: [],
@@ -151,10 +152,6 @@ async function showTodayChart() {
                 }
             },
             plugins: {
-                tooltip: {
-                    mode: 'x',
-                    intersect: false
-                },
                 // zoom: getZoomOptions()
             },
             scales: {
@@ -188,14 +185,15 @@ async function showTodayChart() {
     )
     // compute einspeisung
     types.push('einspeisung')
-    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0,parseInt(item.y, 10)), 0))
+    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0, parseInt(item.y, 10)), 0))
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('todayData',type, values[types.indexOf(type)],'W?'))
+    types.forEach((type) => overwritePlaceHolder('todayData', type, values[types.indexOf(type)], 'W?'))
 }
 
 // Week Chart
 async function showWeekChart() {
+    logSection('[CHART] Showing Week..')
     const types = ['balkon', 'dach', 'verbrauch', 'bezug']
 
     const data = {
@@ -230,17 +228,13 @@ async function showWeekChart() {
                 }
             },
             plugins: {
-                tooltip: {
-                    mode: 'x',
-                    intersect: false
-                },
                 zoom: getZoomOptions()
             },
             scales: {
                 x: {
                     type: 'time',
                     min: getDay(-6),
-                    max: getDay(1),
+                    max: `${getDay(0)} 23:59:59`,
                     time: {
                         unit: "day",
                         displayFormats: {
@@ -267,17 +261,18 @@ async function showWeekChart() {
     )
     // compute einspeisung
     types.push('einspeisung')
-    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0,parseInt(item.y, 10)), 0))
+    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0, parseInt(item.y, 10)), 0))
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('weekData',type, values[types.indexOf(type)],'W?'))
+    types.forEach((type) => overwritePlaceHolder('weekData', type, values[types.indexOf(type)], 'W?'))
 }
 
 async function showCharts() {
-    showLiveChart();
-    await sleep(1000)
-    showTodayChart()
-    await sleep(1000)
-    showWeekChart();
+    showLiveChart()
+        .then(value => showTodayChart()
+            .then(value => showWeekChart()
+            )
+        );
 }
+
 showCharts()

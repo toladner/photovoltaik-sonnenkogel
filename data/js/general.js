@@ -32,3 +32,7 @@ function deleteStatus(id) {
         }
     }
 }
+
+function logSection(text) {
+    console.log(`----\n${text}`)
+}

@@ -15,8 +15,8 @@ async function isDataAvailable(type, requestDay) {
 
     // wait until data is available
     while (!(DATA[type][request].available)) {
-        console.log(`[${type}][${request}] Awaiting availability..`)
-        await sleep(250)
+        console.log(`[DATA] ${type} (${request}) - Awaiting availability..`)
+        await sleep(1000)
     }
 }
 
@@ -31,7 +31,7 @@ async function getData(type, requestDay) {
     }
 
     // setup lock to ensure single requests
-    console.log(`[${type}][${requestDay}] Requesting data..`)
+    console.log(`[DATA] ${type} (${requestDay}) - Requesting data..`)
     DATA[type] = {};
 
     // retrieve data
@@ -60,7 +60,6 @@ async function getData(type, requestDay) {
         }
     }
 
-    console.log(`[${type}][${requestDay}] Successful!`)
     return DATA[type][requestDay].value
 }
 

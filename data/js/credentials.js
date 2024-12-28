@@ -6,13 +6,13 @@ async function getCredentials() {
         credentials.available = false;
 
         // get encrypted credentials
-        console.log("[Credentials] Retrieving..")
+        console.log("[CREDENTIALS] Retrieving..")
         const statusId = updateStatus("Login..")
         const response = await fetch('./data/credentials/credentials.encrypted');
         const encryptedCreds = await response.text();
 
         // read key
-        console.log(`[Credentials] Decrypting..`)
+        console.log(`[CREDENTIALS] Decrypting..`)
         const params = new URLSearchParams(new URL(window.location.href).search);
         const key = params.get('pasteid');
 
@@ -31,7 +31,7 @@ async function getCredentials() {
         credentials.value = value;
 
         // obtain s-mile token
-        console.log('[Credentials] Obtaining s-mile token..')
+        console.log('[CREDENTIALS] Obtaining s-mile token..')
         const responseSmile = await fetch(
             "https://global.hoymiles.com/platform/api/gateway/iam/auth_login",
             {
@@ -48,12 +48,12 @@ async function getCredentials() {
         // finish
         credentials.available = true;
         deleteStatus(statusId)
-        console.log(`[Credentials] Initialized.`)
+        console.log(`[CREDENTIALS] Initialized.`)
     }
 
     // wait until available
     while (!credentials.available) {
-        console.log("[Credentials] Waiting..")
+        console.log("[CREDENTIALS] Waiting..")
         await sleep(100)
     }
 
@@ -64,6 +64,7 @@ async function getCredentials() {
 // init credentials
 const credentials = {}
 // initial call to make credentials available
+logSection('')
 getCredentials()
 
 
