@@ -8,7 +8,7 @@ async function getCredentials() {
         // get encrypted credentials
         console.log("[Credentials] Retrieving..")
         const statusId = updateStatus("Login..")
-        const response = await fetch('./js/data/credentials.encrypted');
+        const response = await fetch('./data/credentials/credentials.encrypted');
         const encryptedCreds = await response.text();
 
         // read key

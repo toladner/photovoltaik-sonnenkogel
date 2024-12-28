@@ -1,0 +1,19 @@
+body {
+    --placeholder-color: #dddddd;
+}
+
+body > .container {
+    padding-top: 75px;
+    padding-bottom: 100px;
+}
+
+.chartHolder {
+    margin-top: 16px;
+    aspect-ratio: 2 / 1.1;
+    border-radius: 8px;
+}
+
+.placeholder, .text-secondary.placeholder {
+    color: var(--placeholder-color);
+    background-color: var(--placeholder-color);
+}

@@ -6,6 +6,7 @@
     <title>Photovoltaik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="./data/css/general.css" rel="stylesheet">
 
     <link rel="shortcut icon" type="image/x-icon" href="https://haus-sonnenkogel.appspot.com//pic/sun.ico">
 </head>
@@ -29,25 +30,39 @@
     </div>
 </nav>
 
-<div class="container">
-    <div class="row my-5"></div>
+<div class="container placeholder-glow">
     <div class="row my-5">
-        <div class="col-12 col-sm-4">
+        <div id="liveData" class="col-12 col-sm-4">
             <h1 class="display-5">Live</h1>
-            <strong>Verbrauch:</strong> - W <br/>
-            <strong>Dach:</strong> - W <br/>
-            <small class="text-body-secondary">2024-12-26 14:00:00</small> <br/>
-            <br/>
-            <strong>Balkon:</strong> - W <br/>
-            <small class="text-body-secondary">2024-12-26 13:30:00</small> <br/>
+            <table class="table table-hover">
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Dach</td>
+                    <td class="text-end"><span id="dach" class="placeholder">1000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Balkon</td>
+                    <td class="text-end"><span id="balkon" class="placeholder">100 W</span></td>
+                </tr>
+                <tr>
+                    <td>Verbrauch</td>
+                    <td class="text-end"><span id="verbrauch" class="placeholder">1000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Bezug</td>
+                    <td class="text-end"><span id="bezug" class="placeholder">1000 W</span></td>
+                </tr>
+            </table>
+            <small><span class="text-secondary">
+                Last Update: <br/>
+                Dach: <span id="dateDach" class="placeholder">2024-10-01 13:00:00</span>,
+                Balkon: <span id="dateBalkon" class="placeholder">2024-10-01 13:00</span>.
+            </span></small>
         </div>
-        <div class="col-12 col-sm-8 col-lg-6">
-            <br/>
-            <div id="liveChartSpinner" class="col-12 text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
+        <div class="col-12 col-sm-8 col-lg-6 chartHolder placeholder">
             <canvas id="liveChart"></canvas>
         </div>
     </div>
@@ -56,22 +71,36 @@
     <hr class="col-1 my-4">
 
     <div class="row my-5">
-        <div class="col-12 col-sm-4">
+        <div id="todayData" class="col-12 col-sm-4">
             <h1 class="display-5">Heute</h1>
-            <strong>Verbrauch:</strong> - Wh <br/>
-            <strong>Dach:</strong> - Wh <br/>
-            <small class="text-body-secondary">2024-12-26 14:00:00</small> <br/>
-            <br/>
-            <strong>Balkon:</strong> - Wh <br/>
-            <small class="text-body-secondary">2024-12-26 13:30:00</small> <br/>
+            <table class="table table-hover">
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Dach</td>
+                    <td class="text-end"><span id="dach" class="placeholder">10000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Balkon</td>
+                    <td class="text-end"><span id="balkon" class="placeholder">1000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Verbrauch</td>
+                    <td class="text-end"><span id="verbrauch" class="placeholder">10000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Bezug</td>
+                    <td class="text-end"><span id="bezug" class="placeholder">10000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Eingespeist</td>
+                    <td class="text-end"><span id="einspeisung" class="placeholder">100 W</span></td>
+                </tr>
+            </table>
         </div>
-        <div class="col-12 col-sm-8 col-lg-6">
-            <br/>
-            <div id="todayChartSpinner" class="col-12 text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
+        <div class="col-12 col-sm-8 col-lg-6 chartHolder placeholder">
             <canvas id="todayChart"></canvas>
         </div>
     </div>
@@ -80,22 +109,36 @@
     <hr class="col-1 my-4">
 
     <div class="row my-5">
-        <div class="col-12 col-sm-4">
+        <div id="weekData" class="col-12 col-sm-4">
             <h1 class="display-5">7 Tage</h1>
-            <strong>Verbrauch:</strong> - Wh <br/>
-            <strong>Dach:</strong> - Wh <br/>
-            <small class="text-body-secondary">2024-12-26 14:00:00</small> <br/>
-            <br/>
-            <strong>Balkon:</strong> - Wh <br/>
-            <small class="text-body-secondary">2024-12-26 13:30:00</small> <br/>
+            <table class="table table-hover">
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Dach</td>
+                    <td class="text-end"><span id="dach" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Balkon</td>
+                    <td class="text-end"><span id="balkon" class="placeholder">10000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Verbrauch</td>
+                    <td class="text-end"><span id="verbrauch" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Bezug</td>
+                    <td class="text-end"><span id="bezug" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Eingespeist</td>
+                    <td class="text-end"><span id="einspeisung" class="placeholder">1000 W</span></td>
+                </tr>
+            </table>
         </div>
-        <div class="col-12 col-sm-8 col-lg-6">
-            <br/>
-            <div id="weekChartSpinner" class="col-12 text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
+        <div class="col-12 col-sm-8 col-lg-6 chartHolder placeholder">
             <canvas id="weekChart"></canvas>
         </div>
     </div>
@@ -107,6 +150,9 @@
 
     <a href="https://dns.loxonecloud.com/504F94A0FD08" target="_blank" class="btn btn-sm btn-primary">Loxone (Dach)</a>
     <a href="https://v3.hoymiles.com/website/home" target="_blank" class="btn btn-sm btn-primary">S-Miles (Balkon)</a>
+
+    <br/><br/>
+    Website by Tobias Ladner.
 </div>
 
 <!-- Load library javascript files -->
@@ -126,10 +172,10 @@
         crossorigin="anonymous"></script>
 
 <!-- Load Custom Scripts -->
-<script src="./js/general.js"></script>
-<script src="./js/credentials.js"></script>
-<script src="./js/data.js"></script>
-<script src="./js/plotting.js"></script>
+<script src="data/js/general.js"></script>
+<script src="data/js/credentials.js"></script>
+<script src="data/js/data.js"></script>
+<script src="data/js/visualize.js"></script>
 
 </body>
 </html>

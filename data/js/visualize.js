@@ -10,6 +10,18 @@ const plotData = {
     alpha: '75'
 }
 
+// HELPER FUNCTIONS ----------------------------------------------------------
+
+function removePlaceholder(element) {
+    element.classList.remove('placeholder')
+}
+
+function overwritePlaceHolder(groupId, elementId, value, unit='W') {
+    const element = document.querySelector(`#${groupId} #${elementId}`)
+    element.innerText = (unit === "") ? `${value}` : `${value} ${unit}`
+    removePlaceholder(element)
+}
+
 // DATASET OBJECTS ------------------------------------------------------------
 
 function getBasicDatasetObject(type, data) {
@@ -55,20 +67,29 @@ function getZoomOptions() {
 // Live Chart
 async function showLiveChart() {
 
-    const lastDach = await getLastData('dach')
-    const lastBalkon = await getLastData('balkon')
-    const lastBezug = await getLastData('bezug')
-    const lastVerbrauch = await getLastData('verbrauch')
+    lastData = await Promise.all([
+        getLastData('dach'),
+        getLastData('balkon'),
+        getLastData('verbrauch'),
+        getLastData('bezug'),
+    ]);
+
+    const lastDach = lastData[0];
+    const lastBalkon = lastData[1];
+    const lastVerbrauch = lastData[2];
+    const lastBezug = lastData[3];
 
     const data = {
-        labels: ["Produktion", "Verbrauch"],
+        labels: ["Produktion", "Verbrauch", "Bezug"],
         datasets: [
-            getBasicDatasetObject('dach', [lastDach.y, 0]),
-            getBasicDatasetObject('balkon', [lastBalkon.y, 0]),
-            getBasicDatasetObject('verbrauch', [0,lastVerbrauch.y]),
+            getBasicDatasetObject('dach', [lastDach.y, 0, 0]),
+            getBasicDatasetObject('balkon', [lastBalkon.y, 0, 0]),
+            getBasicDatasetObject('verbrauch', [0,lastVerbrauch.y, 0]),
+            getBasicDatasetObject('bezug', [0,0,lastBezug.y]),
         ]
     };
-    new Chart(document.getElementById('liveChart'), {
+    const chartId = 'liveChart';
+    new Chart(document.getElementById(chartId), {
         type: 'bar',
         data: data,
         options: {
@@ -87,9 +108,17 @@ async function showLiveChart() {
             }
         }
     });
-    document.getElementById('liveChartSpinner').hidden = true;
+
+    // update placeholders
+    removePlaceholder(document.getElementById(chartId).parentElement)
+
+    overwritePlaceHolder('liveData','dach',lastDach.y)
+    overwritePlaceHolder('liveData','dateDach',lastDach.x, '')
+    overwritePlaceHolder('liveData','balkon',lastBalkon.y)
+    overwritePlaceHolder('liveData','dateBalkon',lastBalkon.x, '')
+    overwritePlaceHolder('liveData','verbrauch',lastVerbrauch.y)
+    overwritePlaceHolder('liveData','bezug',lastBezug.y)
 }
-showLiveChart();
 
 // Today Chart
 async function showTodayChart() {
@@ -104,7 +133,8 @@ async function showTodayChart() {
                     }
                 ))
     };
-    new Chart(document.getElementById('todayChart'), {
+    const chartId = 'todayChart';
+    new Chart(document.getElementById(chartId), {
         type: 'line',
         data: data,
         options: {
@@ -124,8 +154,8 @@ async function showTodayChart() {
             scales: {
                 x: {
                     type: 'time',
-                    min: getDay(0),
-                    max: getDay(1),
+                    min: `${getDay(0)} 06:00`,
+                    max: `${getDay(0)} 22:00`,
                     ticks: {stepSize: 2},
                     time: {
                         unit: "hour",
@@ -143,9 +173,21 @@ async function showTodayChart() {
             }
         }
     });
-    document.getElementById('todayChartSpinner').hidden = true;
+
+    // update placeholders
+    removePlaceholder(document.getElementById(chartId).parentElement)
+
+    // sum values
+    const values = types.map((type) =>
+        data.datasets[types.indexOf(type)].data.reduce((sum, item) => sum + parseInt(item.y, 10), 0)
+    )
+    // compute einspeisung
+    types.push('einspeisung')
+    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0,parseInt(item.y, 10)), 0))
+
+    // update placeholder
+    types.forEach((type) => overwritePlaceHolder('todayData',type, values[types.indexOf(type)],'W?'))
 }
-showTodayChart();
 
 // Week Chart
 async function showWeekChart() {
@@ -171,7 +213,8 @@ async function showWeekChart() {
                 )
             )
     };
-    new Chart(document.getElementById('weekChart'), {
+    const chartId = 'weekChart'
+    new Chart(document.getElementById(chartId), {
         type: 'line',
         data: data,
         options: {
@@ -209,6 +252,27 @@ async function showWeekChart() {
             }
         }
     });
-    document.getElementById('weekChartSpinner').hidden = true;
+
+    // update placeholders
+    removePlaceholder(document.getElementById(chartId).parentElement)
+
+    // sum values
+    const values = types.map((type) =>
+        data.datasets[types.indexOf(type)].data.reduce((sum, item) => sum + parseInt(item.y, 10), 0)
+    )
+    // compute einspeisung
+    types.push('einspeisung')
+    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0,parseInt(item.y, 10)), 0))
+
+    // update placeholder
+    types.forEach((type) => overwritePlaceHolder('weekData',type, values[types.indexOf(type)],'W?'))
 }
-showWeekChart();
+
+async function showCharts() {
+    showLiveChart();
+    await sleep(1000)
+    showTodayChart()
+    await sleep(1000)
+    showWeekChart();
+}
+showCharts()

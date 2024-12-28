@@ -10,7 +10,7 @@ function updateStatus(status, id=statusManager.maxId+1) {
 
     // display status
     const spinner = "<div class=\"spinner-grow spinner-grow-sm\" role=\"status\"><span class=\"visually-hidden\">Loading...</span></div>"
-    document.getElementById('status').innerHTML = `${spinner} ${status}`
+    document.getElementById('status').innerHTML = `${status}&emsp;${spinner}`
 
     return id
 }
