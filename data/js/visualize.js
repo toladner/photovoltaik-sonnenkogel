@@ -71,6 +71,8 @@ function getLegendSorting(a,b,data) {
     return (a,b,data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
 }
 
+function getAspectRatio() {return 2 / 1.1}
+
 // CHARTS ---------------------------------------------------------------------
 
 // Live Chart
@@ -104,6 +106,7 @@ async function showLiveChart() {
         data: data,
         options: {
             responsive: true,
+            aspectRatio: getAspectRatio(),
             scales: {
                 x: {
                     stacked: true,
@@ -157,6 +160,7 @@ async function showTodayChart() {
         data: data,
         options: {
             responsive: true,
+            aspectRatio: getAspectRatio(),
             elements: {
                 point: {
                     radius: 0
@@ -238,6 +242,7 @@ async function showWeekChart() {
         data: data,
         options: {
             responsive: true,
+            aspectRatio: getAspectRatio(),
             elements: {
                 point: {
                     radius: 0
