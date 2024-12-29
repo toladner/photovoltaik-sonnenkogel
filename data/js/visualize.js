@@ -2,10 +2,10 @@
 
 // Default matlab colors: https://de.mathworks.com/help/matlab/creating_plots/specify-plot-colors.html
 const plotData = {
-    dach: {name: 'Dach', color: '#0072BD', hidden: false},
-    balkon: {name: 'Balkon', color: '#EDB120', hidden: false},
-    verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true},
-    bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true},
+    dach: {name: 'Dach', color: '#0072BD', hidden: false, legendOrder: 0},
+    balkon: {name: 'Balkon', color: '#EDB120', hidden: false, legendOrder: 1},
+    verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
+    bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
     alpha: '75'
 }
 
@@ -67,6 +67,10 @@ function getZoomOptions() {
     }
 }
 
+function getLegendSorting(a,b,data) {
+    return (a,b,data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
+}
+
 // CHARTS ---------------------------------------------------------------------
 
 // Live Chart
@@ -111,6 +115,13 @@ async function showLiveChart() {
                         text: 'W'
                     }
                 }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        sort: getLegendSorting()
+                    }
+                }
             }
         }
     });
@@ -153,6 +164,11 @@ async function showTodayChart() {
             },
             plugins: {
                 // zoom: getZoomOptions()
+                legend: {
+                    labels: {
+                        sort: getLegendSorting()
+                    }
+                }
             },
             scales: {
                 x: {
@@ -228,7 +244,12 @@ async function showWeekChart() {
                 }
             },
             plugins: {
-                zoom: getZoomOptions()
+                zoom: getZoomOptions(),
+                legend: {
+                    labels: {
+                        sort: getLegendSorting()
+                    }
+                }
             },
             scales: {
                 x: {
@@ -240,6 +261,9 @@ async function showWeekChart() {
                         displayFormats: {
                             day: 'dd. MMM'
                         }
+                    },
+                    ticks: {
+                        callback: (value) => new Date(value).toLocaleDateString('de-DE', {month:'short', day:'2-digit'})
                     }
                 },
                 y: {
@@ -268,6 +292,10 @@ async function showWeekChart() {
 }
 
 async function showCharts() {
+    Chart.defaults.font.size = 16;
+    Chart.defaults.font.family = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"'
+    Chart.defaults.font.weight = 400
+    Chart.defaults.font.lineHeight = 1.5
     showLiveChart()
         .then(value => showTodayChart()
             .then(value => showWeekChart()
