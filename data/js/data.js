@@ -30,9 +30,12 @@ async function getData(type, requestDay) {
         return DATA[type][requestDay].value;
     }
 
-    // setup lock to ensure single requests
     console.log(`[DATA] ${type} (${requestDay}) - Requesting data..`)
-    DATA[type] = {};
+
+    // init type if not already
+    if (!(type in DATA)) {
+        DATA[type] = {};
+    }
 
     // retrieve data
     if (type === "balkon") {
@@ -44,9 +47,9 @@ async function getData(type, requestDay) {
         DATA[type][requestDay] = {value: rawData, available: true};
 
     } else {
-        const types = ["dach", "bezug", "verbrauch"]
         // make requested day/month unavailable
         const requestMonth = requestDay.substring(0, 7);
+        const types = ["dach", "bezug", "verbrauch"]
         for (let i = 0; i < types.length; i++) {
             DATA[types[i]][requestMonth] = {available: false};
         }

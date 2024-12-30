@@ -21,6 +21,36 @@ function overwritePlaceHolder(groupId, elementId, value, unit = 'W?') {
     removePlaceholder(element)
 }
 
+function integrateData(data) {
+    // init area
+    let area = 0;
+
+    // iterate over all data points
+    for (let i= 0; i< data.length -1; i++) {
+        // extract data
+        const xDate = new Date(data[i].x);
+        const y = data[i].y;
+        const x1Date = new Date(data[i+1].x);
+        const y1 = data[i+1].y;
+
+        // compute difference in hours
+        const dx = (x1Date.getTime() - xDate.getTime()) / (1000 * 60 * 60)
+
+        // ignore data points with too large distances...
+        if (dx <= 2) {
+            // compute area of trapezoid
+            const darea = (parseInt(y) + parseInt(y1)) * dx / 2 / 1000
+            // add to result
+            area += darea
+        }
+    }
+
+    // return precision to one decimal
+    area = Math.round(area * 10) / 10;
+
+    return area
+}
+
 // DATASET OBJECTS ------------------------------------------------------------
 
 function getBasicDatasetObject(type, data) {
@@ -199,16 +229,13 @@ async function showTodayChart() {
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
 
-    // sum values
-    const values = types.map((type) =>
-        data.datasets[types.indexOf(type)].data.reduce((sum, item) => sum + parseInt(item.y, 10), 0)
-    )
     // compute einspeisung
     types.push('einspeisung')
-    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0, parseInt(item.y, 10)), 0))
+    data.datasets.push({data: data.datasets[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
+    console.log(data)
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('todayData', type, values[types.indexOf(type)], 'W?'))
+    types.forEach((type) => overwritePlaceHolder('todayData', type, integrateData(data.datasets[types.indexOf(type)].data), 'kWh'))
 }
 
 // Week Chart
@@ -284,16 +311,13 @@ async function showWeekChart() {
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
 
-    // sum values
-    const values = types.map((type) =>
-        data.datasets[types.indexOf(type)].data.reduce((sum, item) => sum + parseInt(item.y, 10), 0)
-    )
+
     // compute einspeisung
     types.push('einspeisung')
-    values.push(data.datasets[types.indexOf('bezug')].data.reduce((sum, item) => sum - Math.min(0, parseInt(item.y, 10)), 0))
+    data.datasets.push({data: data.datasets[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('weekData', type, values[types.indexOf(type)], 'W?'))
+    types.forEach((type) => overwritePlaceHolder('weekData', type, integrateData(data.datasets[types.indexOf(type)].data), 'kWh'))
 }
 
 async function showCharts() {
