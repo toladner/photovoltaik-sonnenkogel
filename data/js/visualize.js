@@ -98,6 +98,9 @@ function getZoomOptions() {
 }
 
 function getLegendSorting(a,b,data) {
+    if (typeof a === "undefined" || typeof b === "undefined") {
+        return 0
+    }
     return (a,b,data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
 }
 
@@ -244,11 +247,11 @@ async function showTodayChart() {
 
     // compute einspeisung
     types.push('einspeisung')
-    data.datasets.push({data: data.datasets[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
-    console.log(data)
+    const values = structuredClone(data.datasets)
+    values.push({data: values[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('todayData', type, integrateData(data.datasets[types.indexOf(type)].data), 'kWh'))
+    types.forEach((type) => overwritePlaceHolder('todayData', type, integrateData(values[types.indexOf(type)].data), 'kWh'))
 }
 
 // Week Chart
@@ -328,10 +331,11 @@ async function showWeekChart() {
 
     // compute einspeisung
     types.push('einspeisung')
-    data.datasets.push({data: data.datasets[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
+    const values = structuredClone(data.datasets)
+    values.push({data: values[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
 
     // update placeholder
-    types.forEach((type) => overwritePlaceHolder('weekData', type, integrateData(data.datasets[types.indexOf(type)].data), 'kWh'))
+    types.forEach((type) => overwritePlaceHolder('weekData', type, integrateData(values[types.indexOf(type)].data), 'kWh'))
 }
 
 async function showCharts() {
