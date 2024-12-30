@@ -103,6 +103,17 @@ function getLegendSorting(a,b,data) {
 
 function getAspectRatio() {return 2 / 1.1}
 
+function getGridStyle() {
+    return {
+        color: function(context) {
+            if (context.tick.value === 0) {
+                return 'black'; // highlight zero grid line
+            }
+            return 'rgba(0, 0, 0, 0.1)'; // default grid line color
+        },
+    }
+}
+
 // CHARTS ---------------------------------------------------------------------
 
 // Live Chart
@@ -146,7 +157,8 @@ async function showLiveChart() {
                     title: {
                         display: true,
                         text: 'W'
-                    }
+                    },
+                    grid: getGridStyle()
                 }
             },
             plugins: {
@@ -220,7 +232,8 @@ async function showTodayChart() {
                     title: {
                         display: true,
                         text: 'W'
-                    }
+                    },
+                    grid: getGridStyle()
                 }
             }
         }
@@ -302,7 +315,8 @@ async function showWeekChart() {
                     title: {
                         display: true,
                         text: 'W'
-                    }
+                    },
+                    grid: getGridStyle()
                 }
             }
         }
