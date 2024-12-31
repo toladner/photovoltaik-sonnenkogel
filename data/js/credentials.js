@@ -63,9 +63,6 @@ async function getCredentials() {
 
 // init credentials
 const credentials = {}
-// initial call to make credentials available
-logSection('')
-getCredentials()
 
 
 

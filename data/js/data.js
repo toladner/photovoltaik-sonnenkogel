@@ -170,7 +170,7 @@ function getDay(deltaDay) {
 }
 
 async function getLastData(type) {
-    let data = await getData(type, getDay(0));
+    const data = await getData(type, getDay(0));
     return data[data.length - 1]
 }
 

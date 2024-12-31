@@ -20,11 +20,17 @@ function overwritePlaceHolder(groupId, elementId, value, unit = 'W?') {
 
     // write into element
     const element = document.querySelector(`#${groupId} #${elementId}`)
-    element.innerText = parseFloat(value).toFixed(1)
+    if (typeof value === "string" && value.includes(':')) {
+        // likely a date
+        element.innerText = value
+    } else {
+        // convert number
+        element.innerText = parseFloat(value).toFixed(1)
 
-    // add unit
-    if (!(unit === "")) {
-        element.innerText = `${element.innerText} ${unit}`
+        // add unit
+        if (!(unit === "")) {
+            element.innerText = `${element.innerText} ${unit}`
+        }
     }
 
     // remove placeholder
@@ -375,7 +381,7 @@ async function showMonthData() {
             overwritePlaceHolder(
                 'monthData',
                 type,
-                (data.datasets[types.indexOf(type)].data).reduce((acc, data_i) => acc+data_i, 0),
+                (data.datasets[types.indexOf(type)].data).reduce((acc, data_i) => acc + data_i, 0),
                 'kWh'
             )
     )
@@ -386,12 +392,18 @@ async function showCharts() {
     Chart.defaults.font.family = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"'
     Chart.defaults.font.weight = 400
     Chart.defaults.font.lineHeight = 1.5
-    showLiveChart()
-        .then(value => showTodayChart()
-            .then(value => showWeekChart()
-                .then(value => showMonthData())
-            )
-        );
+    logSection('[CHART] Starting..')                         // Start:
+    getCredentials()                                              // 1. Credentials
+        .then(value => showLiveChart()                     // 2. Live
+                .then(value => showTodayChart()             // 3. Today
+                    .then(value => showWeekChart()          // 4. Week
+                        .then(value => showMonthData()      // 5. Month
+                            .then(value => {                // Done!
+                                console.log('[CHART] Completed.')
+                            }))
+                    )
+                )
+        )
 }
 
 showCharts()
