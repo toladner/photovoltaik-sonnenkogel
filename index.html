@@ -149,6 +149,45 @@
     <!-- next section -->
     <hr class="col-1 my-4">
 
+    <div class="row my-5">
+        <div id="monthData" class="col-12 col-md-4">
+            <h1 class="display-5">30 Tage</h1>
+            <table class="table table-hover">
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Dach</td>
+                    <td class="text-end"><span id="dach" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Balkon</td>
+                    <td class="text-end"><span id="balkon" class="placeholder">10000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Verbrauch</td>
+                    <td class="text-end"><span id="verbrauch" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Bezug</td>
+                    <td class="text-end"><span id="bezug" class="placeholder">100000 W</span></td>
+                </tr>
+                <tr>
+                    <td>Eingespeist</td>
+                    <td class="text-end"><span id="einspeisung" class="placeholder">1000 W</span></td>
+                </tr>
+            </table>
+        </div>
+        <div class="d-none d-lg-block col-lg-1"></div>
+        <div class="col-12 col-md-8 col-lg-6 chartHolder placeholder">
+            <canvas id="monthChart"></canvas>
+        </div>
+    </div>
+
+    <!-- next section -->
+    <hr class="col-1 my-4">
+
     <h4>Datenquellen</h4>
 
     <a href="https://dns.loxonecloud.com/504F94A0FD08" target="_blank" class="btn btn-sm btn-primary">Loxone (Dach)</a>

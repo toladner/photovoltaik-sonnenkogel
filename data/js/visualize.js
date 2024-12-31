@@ -6,6 +6,7 @@ const plotData = {
     balkon: {name: 'Balkon', color: '#EDB120', hidden: false, legendOrder: 1},
     verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
     bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
+    einspeisung: {name: 'Eingespeist', color: '#77AC30', hidden: false, legendOrder: 4},
     alpha: '75'
 }
 
@@ -16,58 +17,37 @@ function removePlaceholder(element) {
 }
 
 function overwritePlaceHolder(groupId, elementId, value, unit = 'W?') {
+
+    // write into element
     const element = document.querySelector(`#${groupId} #${elementId}`)
-    element.innerText = (unit === "") ? `${value}` : `${value} ${unit}`
-    removePlaceholder(element)
-}
+    element.innerText = parseFloat(value).toFixed(1)
 
-function integrateData(data) {
-    // init area
-    let area = 0;
-
-    // iterate over all data points
-    for (let i= 0; i< data.length -1; i++) {
-        // extract data
-        const xDate = new Date(data[i].x);
-        const y = data[i].y;
-        const x1Date = new Date(data[i+1].x);
-        const y1 = data[i+1].y;
-
-        // compute difference in hours
-        const dx = (x1Date.getTime() - xDate.getTime()) / (1000 * 60 * 60)
-
-        // ignore data points with too large distances...
-        if (dx <= 2) {
-            // compute area of trapezoid
-            const darea = (parseInt(y) + parseInt(y1)) * dx / 2 / 1000
-            // add to result
-            area += darea
-        }
+    // add unit
+    if (!(unit === "")) {
+        element.innerText = `${element.innerText} ${unit}`
     }
 
-    // return precision to one decimal
-    area = Math.round(area * 10) / 10;
-
-    return area
+    // remove placeholder
+    removePlaceholder(element)
 }
 
 // DATASET OBJECTS ------------------------------------------------------------
 
-function getBasicDatasetObject(type, data) {
+function getBasicDatasetObject(type, data, hidden = false) {
     return {
         label: plotData[type].name,
         data: data,
         backgroundColor: `${plotData[type].color}${plotData.alpha}`,
         borderColor: plotData[type].color,
         borderWidth: 1,
-        lineTension: 0.4
+        lineTension: 0.4,
+        hidden: hidden
     }
 }
 
 function getTimeDatasetObject(type, data) {
-    const dataset = getBasicDatasetObject(type, data)
+    const dataset = getBasicDatasetObject(type, data, plotData[type].hidden)
     dataset.fill = 'origin'
-    dataset.hidden = plotData[type].hidden
     return dataset
 }
 
@@ -97,18 +77,20 @@ function getZoomOptions() {
     }
 }
 
-function getLegendSorting(a,b,data) {
+function getLegendSorting(a, b, data) {
     if (typeof a === "undefined" || typeof b === "undefined") {
         return 0
     }
-    return (a,b,data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
+    return (a, b, data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
 }
 
-function getAspectRatio() {return 2 / 1.1}
+function getAspectRatio() {
+    return 2 / 1.1
+}
 
 function getGridStyle() {
     return {
-        color: function(context) {
+        color: function (context) {
             if (context.tick.value === 0) {
                 return 'black'; // highlight zero grid line
             }
@@ -190,6 +172,7 @@ async function showTodayChart() {
     logSection('[CHART] Showing Today..')
     const types = ['balkon', 'dach', 'verbrauch', 'bezug']
 
+    // gather data
     const data = {
         labels: [],
         datasets:
@@ -199,6 +182,18 @@ async function showTodayChart() {
                     }
                 ))
     };
+    // compute einspeisung
+    const type = 'einspeisung';
+    types.push(type)
+    data.datasets.push(getTimeDatasetObject(
+        type,
+        data.datasets[types.indexOf('bezug')].data.map(
+            data_i => {
+                return {x: data_i.x, y: -Math.min(data_i.y, 0)}
+            })
+    ))
+
+    // plot chart
     const chartId = 'todayChart';
     new Chart(document.getElementById(chartId), {
         type: 'line',
@@ -244,14 +239,15 @@ async function showTodayChart() {
 
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
-
-    // compute einspeisung
-    types.push('einspeisung')
-    const values = structuredClone(data.datasets)
-    values.push({data: values[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
-
-    // update placeholder
-    types.forEach((type) => overwritePlaceHolder('todayData', type, integrateData(values[types.indexOf(type)].data), 'kWh'))
+    // update statistics
+    types.forEach(
+        type =>
+            overwritePlaceHolder(
+                'weekData',
+                type,
+                integrateData(data.datasets[types.indexOf(type)].data), 'kWh'
+            )
+    )
 }
 
 // Week Chart
@@ -259,6 +255,7 @@ async function showWeekChart() {
     logSection('[CHART] Showing Week..')
     const types = ['balkon', 'dach', 'verbrauch', 'bezug']
 
+    // gather data
     const data = {
         labels: [],
         datasets:
@@ -266,19 +263,24 @@ async function showWeekChart() {
                 types.map(async (type) => {
                         return getTimeDatasetObject(
                             type,
-                            await Promise.all([
-                                getData(type, getDay(-6)),
-                                getData(type, getDay(-5)),
-                                getData(type, getDay(-4)),
-                                getData(type, getDay(-3)),
-                                getData(type, getDay(-2)),
-                                getData(type, getDay(-1)),
-                                getData(type, getDay(0)),
-                            ]).then(results => results.flat()))
+                            await Promise.all(range(-6, 0).map(i => getData(type, getDay(i))))
+                                .then(results => results.flat()))
                     }
                 )
             )
     };
+    // compute einspeisung
+    const type = 'einspeisung';
+    types.push(type)
+    data.datasets.push(getTimeDatasetObject(
+        type,
+        data.datasets[types.indexOf('bezug')].data.map(
+            data_i => {
+                return {x: data_i.x, y: -Math.min(data_i.y, 0)}
+            })
+    ))
+
+    // plot chat
     const chartId = 'weekChart'
     new Chart(document.getElementById(chartId), {
         type: 'line',
@@ -311,7 +313,7 @@ async function showWeekChart() {
                         }
                     },
                     ticks: {
-                        callback: (value) => new Date(value).toLocaleDateString('de-DE', {month:'short', day:'2-digit'})
+                        callback: (value) => new Date(value).toLocaleDateString('de-DE', {month: 'short', day: '2-digit'})
                     }
                 },
                 y: {
@@ -327,15 +329,96 @@ async function showWeekChart() {
 
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
+    // update statistics
+    types.forEach(
+        type =>
+            overwritePlaceHolder(
+                'todayData',
+                type,
+                integrateData(data.datasets[types.indexOf(type)].data), 'kWh'
+            )
+    )
+}
 
+async function showMonthData() {
+    logSection('[CHART] Showing Month..')
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug']
+    const N = 30;
+    const days = range(-(N - 1), 0);
 
+    // gather data
+    const data = {
+        labels: days.map(i => getDay(i)),
+        datasets:
+            await Promise.all(types.map(async type =>
+                getBasicDatasetObject(type,
+                    (await Promise.all(
+                        days.map(i =>
+                            getData(type, getDay(i))
+                        )
+                    )).map(data_i => integrateData(data_i)),
+                    plotData[type].hidden
+                ))
+            )
+
+    };
     // compute einspeisung
-    types.push('einspeisung')
-    const values = structuredClone(data.datasets)
-    values.push({data: values[types.indexOf('bezug')].data.map(item => {return {x: item.x, y: -Math.min(0, item.y)}})})
+    const type = 'einspeisung';
+    types.push(type)
+    data.datasets.push(getBasicDatasetObject(type,
+        (await Promise.all(
+            days.map(i =>
+                getData('bezug', getDay(i))
+            )
+        )).map(
+            data_i => integrateData(
+                data_i.map(data_ij => {
+                    return {x: data_ij.x, y: -Math.min(data_ij.y, 0)}
+                })
+            )
+        ),
+        plotData[type].hidden
+    ))
 
-    // update placeholder
-    types.forEach((type) => overwritePlaceHolder('weekData', type, integrateData(values[types.indexOf(type)].data), 'kWh'))
+    // plot chart
+    const chartId = 'monthChart';
+    new Chart(document.getElementById(chartId), {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            aspectRatio: getAspectRatio(),
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'kWh'
+                    },
+                    grid: getGridStyle()
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        sort: getLegendSorting()
+                    }
+                }
+            }
+        }
+    });
+
+    // update placeholders
+    removePlaceholder(document.getElementById(chartId).parentElement)
+    // update statistics
+    types.forEach(
+        type =>
+            overwritePlaceHolder(
+                'monthData',
+                type,
+                (data.datasets[types.indexOf(type)].data).reduce((acc, data_i) => acc+data_i, 0),
+                'kWh'
+            )
+    )
 }
 
 async function showCharts() {
@@ -346,8 +429,10 @@ async function showCharts() {
     showLiveChart()
         .then(value => showTodayChart()
             .then(value => showWeekChart()
+                .then(value => showMonthData())
             )
         );
 }
 
 showCharts()
+

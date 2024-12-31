@@ -67,6 +67,13 @@ async function getData(type, requestDay) {
 }
 
 async function retrieveDataBalkon(requestDay) {
+    // only available from 2024-12-16
+    const firstDate = new Date('2024-12-16')
+    const requestDate = new Date(requestDay)
+    if (firstDate.getTime() > requestDate.getTime()) {
+        return []
+    }
+
     // init
     const credentials = await getCredentials()
     const statusId = updateStatus(`Loading ${requestDay}..`)
@@ -145,17 +152,45 @@ async function retrieveDataDach(requestMonth) {
     return rawData
 }
 
-function getDay(dayAgo) {
+function getDay(deltaDay) {
     // Get today's date
     const today = new Date();
 
     // compute other day
     const otherDay = new Date(today);
-    otherDay.setDate(today.getDate() + dayAgo);
+    otherDay.setDate(today.getDate() + deltaDay);
     return otherDay.toISOString().slice(0, 10);
 }
 
 async function getLastData(type) {
     let data = await getData(type, getDay(0));
     return data[data.length - 1]
+}
+
+
+function integrateData(data) {
+    // init area
+    let area = 0;
+
+    // iterate over all data points
+    for (let i= 0; i< data.length -1; i++) {
+        // extract data
+        const xDate = new Date(data[i].x);
+        const y = data[i].y;
+        const x1Date = new Date(data[i+1].x);
+        const y1 = data[i+1].y;
+
+        // compute difference in hours
+        const dx = (x1Date.getTime() - xDate.getTime()) / (1000 * 60 * 60)
+
+        // ignore data points with too large distances...
+        if (dx <= 2) {
+            // compute area of trapezoid
+            const darea = (parseInt(y) + parseInt(y1)) * dx / 2 / 1000
+            // add to result
+            area += darea
+        }
+    }
+
+    return area
 }

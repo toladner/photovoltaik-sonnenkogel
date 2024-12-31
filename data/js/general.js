@@ -36,3 +36,16 @@ function deleteStatus(id) {
 function logSection(text) {
     console.log(`----\n${text}`)
 }
+
+function range(a, b = -1, step= 1) {
+    fromGiven = !(b === -1)
+    const from = fromGiven ? a : 0;
+    const to = fromGiven ? b : a;
+    return [...Array(Math.abs(Math.floor((to - from) / step)) + 1)].map((_, i) => from + i * step);
+}
+
+function zeros(n) {
+    return range(n).map(i => 0)
+}
+
+
