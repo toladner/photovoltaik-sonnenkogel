@@ -170,7 +170,7 @@ async function showLiveChart() {
 // Today Chart
 async function showTodayChart() {
     logSection('[CHART] Showing Today..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
 
     // gather data
     const data = {
@@ -182,17 +182,6 @@ async function showTodayChart() {
                     }
                 ))
     };
-    // compute einspeisung
-    const type = 'einspeisung';
-    types.push(type)
-    data.datasets.push(getTimeDatasetObject(
-        type,
-        data.datasets[types.indexOf('bezug')].data.map(
-            data_i => {
-                return {x: data_i.x, y: -Math.min(data_i.y, 0)}
-            })
-    ))
-
     // plot chart
     const chartId = 'todayChart';
     new Chart(document.getElementById(chartId), {
@@ -243,7 +232,7 @@ async function showTodayChart() {
     types.forEach(
         type =>
             overwritePlaceHolder(
-                'weekData',
+                'todayData',
                 type,
                 integrateData(data.datasets[types.indexOf(type)].data), 'kWh'
             )
@@ -253,7 +242,7 @@ async function showTodayChart() {
 // Week Chart
 async function showWeekChart() {
     logSection('[CHART] Showing Week..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
 
     // gather data
     const data = {
@@ -269,17 +258,6 @@ async function showWeekChart() {
                 )
             )
     };
-    // compute einspeisung
-    const type = 'einspeisung';
-    types.push(type)
-    data.datasets.push(getTimeDatasetObject(
-        type,
-        data.datasets[types.indexOf('bezug')].data.map(
-            data_i => {
-                return {x: data_i.x, y: -Math.min(data_i.y, 0)}
-            })
-    ))
-
     // plot chat
     const chartId = 'weekChart'
     new Chart(document.getElementById(chartId), {
@@ -333,7 +311,7 @@ async function showWeekChart() {
     types.forEach(
         type =>
             overwritePlaceHolder(
-                'todayData',
+                'weekData',
                 type,
                 integrateData(data.datasets[types.indexOf(type)].data), 'kWh'
             )
@@ -342,7 +320,7 @@ async function showWeekChart() {
 
 async function showMonthData() {
     logSection('[CHART] Showing Month..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
     const N = 30;
     const days = range(-(N - 1), 0);
 
@@ -362,24 +340,6 @@ async function showMonthData() {
             )
 
     };
-    // compute einspeisung
-    const type = 'einspeisung';
-    types.push(type)
-    data.datasets.push(getBasicDatasetObject(type,
-        (await Promise.all(
-            days.map(i =>
-                getData('bezug', getDay(i))
-            )
-        )).map(
-            data_i => integrateData(
-                data_i.map(data_ij => {
-                    return {x: data_ij.x, y: -Math.min(data_ij.y, 0)}
-                })
-            )
-        ),
-        plotData[type].hidden
-    ))
-
     // plot chart
     const chartId = 'monthChart';
     new Chart(document.getElementById(chartId), {

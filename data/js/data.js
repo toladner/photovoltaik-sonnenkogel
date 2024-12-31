@@ -1,4 +1,4 @@
-const DATA = {dach: {}, balkon: {}, verbrauch: {}, bezug: {}}
+const DATA = {dach: {}, balkon: {}, verbrauch: {}, bezug: {}, einspeisung: {}}
 
 async function sleep(ms) {
     await new Promise(r => setTimeout(r, ms));
@@ -32,17 +32,24 @@ async function getData(type, requestDay) {
 
     console.log(`[DATA] ${type} (${requestDay}) - Requesting data..`)
 
-    // init type if not already
-    if (!(type in DATA)) {
-        DATA[type] = {};
-    }
-
     // retrieve data
     if (type === "balkon") {
         // make requested day unavailable
         DATA[type][requestDay] = {available: false};
         // retrieve balkon data
         const rawData = await retrieveDataBalkon(requestDay)
+        // save data
+        DATA[type][requestDay] = {value: rawData, available: true};
+
+    } else if (type === "einspeisung") {
+        // make requested day unavailable
+        DATA[type][requestDay] = {available: false};
+        // request bezug data
+        const bezugData = await getData('bezug', requestDay)
+        // only count negative numbers
+        const rawData = bezugData.map(data_i => {
+            return {x: data_i.x, y: -Math.min(0, data_i.y)}
+        })
         // save data
         DATA[type][requestDay] = {value: rawData, available: true};
 
@@ -94,7 +101,7 @@ async function retrieveDataBalkon(requestDay) {
         }
     })
     const json = await response.json();
-    const rawData =  json.data[0].data_list.map(element => {
+    const rawData = json.data[0].data_list.map(element => {
         return {
             x: `${requestDay} ${element.date}`,
             y: element.pv_power
@@ -114,7 +121,7 @@ async function retrieveDataDach(requestMonth) {
     const responseDNS = await fetch("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
 
     // fetch data from real url
-    const url = `${responseDNS.url}stats/18cefec1-017c-47f3-ffffed57184a04d2.${requestMonth.replace('-','')}.xml`
+    const url = `${responseDNS.url}stats/18cefec1-017c-47f3-ffffed57184a04d2.${requestMonth.replace('-', '')}.xml`
     const headers = new Headers({
         'Authorization': `Basic ${btoa(`${credentials.loxone.username}:${credentials.loxone.password}`)}`
     });
@@ -173,12 +180,12 @@ function integrateData(data) {
     let area = 0;
 
     // iterate over all data points
-    for (let i= 0; i< data.length -1; i++) {
+    for (let i = 0; i < data.length - 1; i++) {
         // extract data
         const xDate = new Date(data[i].x);
         const y = data[i].y;
-        const x1Date = new Date(data[i+1].x);
-        const y1 = data[i+1].y;
+        const x1Date = new Date(data[i + 1].x);
+        const y1 = data[i + 1].y;
 
         // compute difference in hours
         const dx = (x1Date.getTime() - xDate.getTime()) / (1000 * 60 * 60)
