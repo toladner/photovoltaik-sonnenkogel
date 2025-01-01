@@ -90,8 +90,12 @@ function getLegendSorting(a, b, data) {
     return (a, b, data) => plotData[a.text.toLowerCase()].legendOrder - plotData[b.text.toLowerCase()].legendOrder
 }
 
-function getAspectRatio() {
-    return 2 / 1.1
+function getAspectRatio(format = "short") {
+    if (format === 'tall') {
+        return 2 / 1.4
+    } else {
+        return 2 / 1.1
+    }
 }
 
 function getGridStyle() {
@@ -275,7 +279,7 @@ async function showWeekChart() {
         data: data,
         options: {
             responsive: true,
-            aspectRatio: getAspectRatio(),
+            aspectRatio: getAspectRatio('tall'),
             elements: {
                 point: {
                     radius: 0
@@ -357,7 +361,7 @@ async function showMonthData() {
             data: data,
             options: {
                 responsive: true,
-                aspectRatio: getAspectRatio(),
+                aspectRatio: getAspectRatio('tall'),
                 scales: {
                     y: {
                         title: {

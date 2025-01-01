@@ -48,4 +48,25 @@ function zeros(n) {
     return range(n).map(i => 0)
 }
 
+function getDay(deltaDay, format='iso') {
+    // Get today's date
+    const today = new Date();
+
+    // compute other day
+    const otherDay = new Date(today);
+    otherDay.setDate(today.getDate() + deltaDay);
+
+    // return formatted date
+    return formatDate(otherDay, format)
+}
+
+function formatDate(date, format="iso") {
+    switch (format) {
+        case "month-day":
+            return date.toLocaleDateString('de-DE', {month: 'short', day: '2-digit', year: "2-digit"})
+        default: // "iso"
+            return date.toISOString().slice(0, 10);
+    }
+}
+
 

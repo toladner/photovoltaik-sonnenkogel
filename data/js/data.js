@@ -164,32 +164,10 @@ async function retrieveDataDach(requestMonth) {
     return rawData
 }
 
-function getDay(deltaDay, format='iso') {
-    // Get today's date
-    const today = new Date();
-
-    // compute other day
-    const otherDay = new Date(today);
-    otherDay.setDate(today.getDate() + deltaDay);
-
-    // return formatted date
-    return formatDate(otherDay, format)
-}
-
-function formatDate(date, format="iso") {
-    switch (format) {
-        case "month-day":
-            return date.toLocaleDateString('de-DE', {month: 'short', day: '2-digit'})
-        default: // "iso"
-            return date.toISOString().slice(0, 10);
-    }
-}
-
 async function getLastData(type) {
     const data = await getData(type, getDay(0));
     return data[data.length - 1]
 }
-
 
 function integrateData(data) {
     // init area
