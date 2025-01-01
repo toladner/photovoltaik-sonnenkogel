@@ -6,7 +6,7 @@ const plotData = {
     balkon: {name: 'Balkon', color: '#EDB120', hidden: false, legendOrder: 1},
     verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
     bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
-    einspeisung: {name: 'Eingespeist', color: '#77AC30', hidden: false, legendOrder: 4},
+    einspeisung: {name: 'Einspeisung', color: '#77AC30', hidden: false, legendOrder: 4},
     alpha: '75'
 }
 
@@ -111,26 +111,33 @@ function getGridStyle() {
 async function showLiveChart() {
     logSection('[CHART] Showing Live..')
 
-    lastData = await Promise.all([
-        getLastData('dach'),
-        getLastData('balkon'),
-        getLastData('verbrauch'),
-        getLastData('bezug'),
-    ]);
+    // type: position
+    const typesMap = {
+        'dach': {pos: 0},
+        'balkon': {pos: 0},
+        'verbrauch': {pos: 1},
+        'bezug': {pos: 2},
+        'einspeisung': {pos: 2},
+    }
+    const types = Object.keys(typesMap)
 
-    const lastDach = lastData[0];
-    const lastBalkon = lastData[1];
-    const lastVerbrauch = lastData[2];
-    const lastBezug = lastData[3];
+    // retrieve data
+    await Promise.all(
+        types.map(async type =>
+            typesMap[type].data = await getLastData(type)
+        )
+    )
+
+    console.log(await getData('einspeisung', getDay(0)))
 
     const data = {
         labels: ["Produktion", "Verbrauch", "Bezug"],
-        datasets: [
-            getBasicDatasetObject('dach', [lastDach.y, 0, 0]),
-            getBasicDatasetObject('balkon', [lastBalkon.y, 0, 0]),
-            getBasicDatasetObject('verbrauch', [0, lastVerbrauch.y, 0]),
-            getBasicDatasetObject('bezug', [0, 0, lastBezug.y]),
-        ]
+        datasets:
+            types.map(type => {
+                const data_i = [0, 0, 0];
+                data_i[typesMap[type].pos] = typesMap[type].data.y
+                return getBasicDatasetObject(type, data_i)
+            })
     };
     const chartId = 'liveChart';
     new Chart(document.getElementById(chartId), {
@@ -164,13 +171,10 @@ async function showLiveChart() {
 
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
-
-    overwritePlaceHolder('liveData', 'dach', lastDach.y, 'W')
-    overwritePlaceHolder('liveData', 'dateDach', lastDach.x, '')
-    overwritePlaceHolder('liveData', 'balkon', lastBalkon.y, 'W')
-    overwritePlaceHolder('liveData', 'dateBalkon', lastBalkon.x, '')
-    overwritePlaceHolder('liveData', 'verbrauch', lastVerbrauch.y, 'W')
-    overwritePlaceHolder('liveData', 'bezug', lastBezug.y, 'W')
+    // update statistics
+    types.forEach(type => overwritePlaceHolder('liveData', type, typesMap[type].data.y, 'W'))
+    overwritePlaceHolder('liveData', 'dateDach', typesMap['dach'].data.x, '')
+    overwritePlaceHolder('liveData', 'dateBalkon', typesMap['balkon'].data.x, '')
 }
 
 // Today Chart
