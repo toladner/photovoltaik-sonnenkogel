@@ -1,8 +1,7 @@
-
 // init statusManager
 statusManager = {maxId: 0, currId: 0, queuedIds: {}}
 
-function updateStatus(status, id=statusManager.maxId+1) {
+function updateStatus(status, id = statusManager.maxId + 1) {
     // save status
     statusManager.queuedIds[id] = status
     statusManager.currId = id;
@@ -27,7 +26,7 @@ function deleteStatus(id) {
             statusManager.currId = 0;
             document.getElementById('status').innerText = ""
         } else {
-            const nextId = parseInt(ids[ids.length-1])
+            const nextId = parseInt(ids[ids.length - 1])
             updateStatus(statusManager.queuedIds[nextId], nextId)
         }
     }
@@ -37,7 +36,7 @@ function logSection(text) {
     console.log(`----\n${text}`)
 }
 
-function range(a, b = -1, step= 1) {
+function range(a, b = -1, step = 1) {
     fromGiven = !(b === -1)
     const from = fromGiven ? a : 0;
     const to = fromGiven ? b : a;
@@ -48,9 +47,7 @@ function zeros(n) {
     return range(n).map(i => 0)
 }
 
-function getDay(deltaDay, format='iso') {
-    // Get today's date
-    const today = new Date();
+function getDay(deltaDay = 0, format = 'iso', today = new Date()) {
 
     // compute other day
     const otherDay = new Date(today);
@@ -60,7 +57,7 @@ function getDay(deltaDay, format='iso') {
     return formatDate(otherDay, format)
 }
 
-function formatDate(date, format="iso") {
+function formatDate(date, format = "iso") {
     switch (format) {
         case "month-day":
             return date.toLocaleDateString('de-DE', {month: 'short', day: '2-digit', year: "2-digit"})

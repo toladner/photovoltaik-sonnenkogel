@@ -12,6 +12,10 @@ const plotData = {
 
 // HELPER FUNCTIONS ----------------------------------------------------------
 
+function addPlaceholder(element) {
+    element.classList.add('placeholder')
+}
+
 function removePlaceholder(element) {
     element.classList.remove('placeholder')
 }
@@ -35,6 +39,25 @@ function overwritePlaceHolder(groupId, elementId, value, unit = 'W?') {
 
     // remove placeholder
     removePlaceholder(element)
+}
+
+function enableButtons(which, flag) {
+    // gather buttons
+    let buttons = [];
+    if (which === 'today' || which === 'all') {
+        buttons.push("todayDataPrev", "todayDataNext",'todayPicker')
+    }
+
+    // enable/disable buttons
+    buttons.map(id => {
+        if (flag) {
+            // enable button
+            document.getElementById(id).removeAttribute('disabled')
+        } else {
+            // disable button
+            document.getElementById(id).setAttribute('disabled', 'true')
+        }
+    })
 }
 
 // DATASET OBJECTS ------------------------------------------------------------
@@ -111,7 +134,8 @@ function getGridStyle() {
 
 // CHARTS ---------------------------------------------------------------------
 
-// Live Chart
+// Live Chart ---
+
 async function showLiveChart() {
     logSection('[CHART] Showing Live..')
 
@@ -131,8 +155,6 @@ async function showLiveChart() {
             typesMap[type].data = await getLastData(type)
         )
     )
-
-    console.log(await getData('einspeisung', getDay(0)))
 
     const data = {
         labels: ["Produktion", "Verbrauch", "Bezug"],
@@ -184,26 +206,17 @@ async function showLiveChart() {
     overwritePlaceHolder('liveData', 'dateBalkon', typesMap['balkon'].data.x, '')
 }
 
-// Today Chart
+// Today Chart ---
+
+let todayDate = getDay();
+
 async function showTodayChart() {
     logSection('[CHART] Showing Today..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
 
-    // gather data
-    const data = {
-        labels: [],
-        datasets:
-            await Promise.all(
-                types.map(async (type) => {
-                        return getTimeDatasetObject(type, await getData(type, getDay(0)))
-                    }
-                ))
-    };
     // plot chart
     const chartId = 'todayChart';
     new Chart(document.getElementById(chartId), {
         type: 'line',
-        data: data,
         options: {
             responsive: true,
             aspectRatio: getAspectRatio(),
@@ -223,8 +236,6 @@ async function showTodayChart() {
             scales: {
                 x: {
                     type: 'time',
-                    min: `${getDay(0)} 06:00`,
-                    max: `${getDay(0)} 22:00`,
                     time: {
                         unit: "hour",
                         displayFormats: {
@@ -246,9 +257,46 @@ async function showTodayChart() {
         }
     });
 
+    await updateTodayData(todayDate)
+
+}
+
+async function updateTodayData(date) {
+    // disable buttons and add placeholder while loading charts
+    const chartId = 'todayChart';
+    enableButtons('today', false)
+    addPlaceholder(document.getElementById(chartId).parentElement)
+
+    // gather data
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+    const data = {
+        labels: [],
+        datasets:
+            (await Promise.all(
+                types.map(async (type) => {
+                        return getTimeDatasetObject(type, await getData(type, date))
+                    }
+                )))
+    };
+    // update chart
+    let chart = Chart.getChart(chartId);
+    if (chart.data.datasets.length > 0) {
+        // correctly set visible/hidden labels
+        range(chart.data.datasets.length - 1).forEach(i => data.datasets[i].hidden = !chart._metasets[i].visible)
+    }
+    chart.data = data;
+    chart.options.scales.x.min = `${date} 06:00`
+    chart.options.scales.x.max = `${date} 22:00`
+    chart.update('none'); // no animation
+
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
     // update statistics
+    document.querySelector(`#todayData #headline`)
+        .innerText = date === getDay(0) ?
+        "Heute" : date === getDay(-1) ?
+            "Gestern" : formatDate(new Date(date), 'month-day');
+    document.getElementById('todayPicker').value = todayDate;
     types.forEach(
         type =>
             overwritePlaceHolder(
@@ -257,9 +305,32 @@ async function showTodayChart() {
                 integrateData(data.datasets[types.indexOf(type)].data), 'kWh'
             )
     )
+    // enable buttons
+    enableButtons('today', true)
 }
 
-// Week Chart
+async function updateToday(which) {
+    // disable buttons
+    enableButtons('today', false)
+
+    // compute desired date
+    const nextDate = (which === 'picker') ?
+        document.getElementById('todayPicker').value :
+        getDay((which === 'prev') ? -1 : +1, 'iso', new Date(todayDate));
+
+    if (nextDate !== todayDate && new Date(nextDate).getTime() <= new Date().getTime()) {
+        // update if required
+        await updateTodayData(nextDate)
+        todayDate = nextDate;
+    }
+    document.getElementById('todayPicker').value = todayDate
+
+    // enable buttons
+    enableButtons('today', true)
+}
+
+// Week Chart ---
+
 async function showWeekChart() {
     logSection('[CHART] Showing Week..')
     const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
@@ -343,6 +414,8 @@ async function showWeekChart() {
     )
 }
 
+// Month Chart ---
+
 async function showMonthData() {
     logSection('[CHART] Showing Month..')
     const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
@@ -413,11 +486,18 @@ async function showMonthData() {
     )
 }
 
+// Show Charts ---
+
 async function showCharts() {
+    // disable all buttons
+    enableButtons('all', false)
+
+    // set chart defaults
     Chart.defaults.font.size = 16;
     Chart.defaults.font.family = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"'
     Chart.defaults.font.weight = 400
     Chart.defaults.font.lineHeight = 1.5
+
     logSection('[CHART] Starting..')                     // Start:
     getCredentials()                                          // 1. Credentials
         .then(value => showLiveChart()                 // 2. Live
@@ -433,4 +513,5 @@ async function showCharts() {
 }
 
 showCharts()
+
 
