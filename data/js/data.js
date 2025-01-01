@@ -63,11 +63,16 @@ async function getData(type, requestDay) {
         // retrieve data
         const rawData = await retrieveDataDach(requestMonth);
         // store retrieved data in DATA
-        for (let i = 0; i < types.length; i++) {
-            const entries = rawData[types[i]]
-            Object.keys(entries).forEach((key) => DATA[types[i]][key] = {value: entries[key]})
-            DATA[types[i]][requestMonth] = {available: true};
-        }
+        types.forEach(type => {
+            // gather data per day
+            const entries = rawData[type]
+            Object.keys(entries)
+                // filter not-requested days (e.g., '2025-01-01 00:00:00' for requested '2024-12')
+                .filter(day_i => day_i.includes(requestMonth))
+                // save each day
+                .forEach((day_i) => DATA[type][day_i] = {value: entries[day_i]})
+            DATA[type][requestMonth] = {available: true};
+        })
     }
 
     return DATA[type][requestDay].value
@@ -159,14 +164,25 @@ async function retrieveDataDach(requestMonth) {
     return rawData
 }
 
-function getDay(deltaDay) {
+function getDay(deltaDay, format='iso') {
     // Get today's date
     const today = new Date();
 
     // compute other day
     const otherDay = new Date(today);
     otherDay.setDate(today.getDate() + deltaDay);
-    return otherDay.toISOString().slice(0, 10);
+
+    // return formatted date
+    return formatDate(otherDay, format)
+}
+
+function formatDate(date, format="iso") {
+    switch (format) {
+        case "month-day":
+            return date.toLocaleDateString('de-DE', {month: 'short', day: '2-digit'})
+        default: // "iso"
+            return date.toISOString().slice(0, 10);
+    }
 }
 
 async function getLastData(type) {

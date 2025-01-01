@@ -297,7 +297,7 @@ async function showWeekChart() {
                         }
                     },
                     ticks: {
-                        callback: (value) => new Date(value).toLocaleDateString('de-DE', {month: 'short', day: '2-digit'})
+                        callback: (value) => formatDate(new Date(value), "month-day")
                     }
                 },
                 y: {
@@ -332,7 +332,7 @@ async function showMonthData() {
 
     // gather data
     const data = {
-        labels: days.map(i => getDay(i)),
+        labels: days.map(i => getDay(i, 'month-day')),
         datasets:
             await Promise.all(types.map(async type =>
                 getBasicDatasetObject(type,
@@ -349,29 +349,30 @@ async function showMonthData() {
     // plot chart
     const chartId = 'monthChart';
     new Chart(document.getElementById(chartId), {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            aspectRatio: getAspectRatio(),
-            scales: {
-                y: {
-                    title: {
-                        display: true,
-                        text: 'kWh'
-                    },
-                    grid: getGridStyle()
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        sort: getLegendSorting()
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                aspectRatio: getAspectRatio(),
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'kWh'
+                        },
+                        grid: getGridStyle()
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            sort: getLegendSorting()
+                        }
                     }
                 }
             }
         }
-    });
+    )
 
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
@@ -392,17 +393,17 @@ async function showCharts() {
     Chart.defaults.font.family = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"'
     Chart.defaults.font.weight = 400
     Chart.defaults.font.lineHeight = 1.5
-    logSection('[CHART] Starting..')                         // Start:
-    getCredentials()                                              // 1. Credentials
-        .then(value => showLiveChart()                     // 2. Live
-                .then(value => showTodayChart()             // 3. Today
-                    .then(value => showWeekChart()          // 4. Week
-                        .then(value => showMonthData()      // 5. Month
-                            .then(value => {                // Done!
-                                console.log('[CHART] Completed.')
-                            }))
-                    )
+    logSection('[CHART] Starting..')                     // Start:
+    getCredentials()                                          // 1. Credentials
+        .then(value => showLiveChart()                 // 2. Live
+            .then(value => showTodayChart()             // 3. Today
+                .then(value => showWeekChart()          // 4. Week
+                    .then(value => showMonthData()      // 5. Month
+                        .then(value => {                // Done!
+                            console.log('[CHART] Completed.')
+                        }))
                 )
+            )
         )
 }
 
