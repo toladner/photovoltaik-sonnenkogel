@@ -160,6 +160,9 @@ async function showLiveChart() {
                         display: true,
                         text: 'W'
                     },
+                    ticks: {
+                        stepSize: 500
+                    },
                     grid: getGridStyle()
                 }
             },
@@ -234,6 +237,9 @@ async function showTodayChart() {
                         display: true,
                         text: 'W'
                     },
+                    ticks: {
+                        stepSize: 500
+                    },
                     grid: getGridStyle()
                 }
             }
@@ -305,6 +311,8 @@ async function showWeekChart() {
                         }
                     },
                     ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
                         callback: (value) => formatDate(new Date(value), "month-day")
                     }
                 },
@@ -312,6 +320,9 @@ async function showWeekChart() {
                     title: {
                         display: true,
                         text: 'W'
+                    },
+                    ticks: {
+                        stepSize: 500
                     },
                     grid: getGridStyle()
                 }
@@ -363,6 +374,12 @@ async function showMonthData() {
                 responsive: true,
                 aspectRatio: getAspectRatio('tall'),
                 scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                        }
+                    },
                     y: {
                         title: {
                             display: true,
