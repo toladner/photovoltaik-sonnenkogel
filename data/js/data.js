@@ -1,4 +1,4 @@
-const DATA = {dach: {}, balkon: {}, verbrauch: {}, bezug: {}, einspeisung: {}}
+const DATA = {dach: {}, balkon: {}, verbrauch: {}, bezugReal: {}, einspeisung: {}, bezug: {}}
 
 async function sleep(ms) {
     await new Promise(r => setTimeout(r, ms));
@@ -55,6 +55,18 @@ async function getData(type, requestDay) {
         })
         // save data
         DATA[type][requestDay] = {value: rawData, available: true};
+
+    } else if (type === "bezugReal") {
+            // make requested day unavailable
+            DATA[type][requestDay] = {available: false};
+            // request bezug data
+            const bezugData = await getData('bezug', requestDay)
+            // only count negative numbers
+            const rawData = bezugData.map(data_i => {
+                return {x: data_i.x, y: Math.max(0, data_i.y)}
+            })
+            // save data
+            DATA[type][requestDay] = {value: rawData, available: true};
 
     } else {
         // make requested day/month unavailable

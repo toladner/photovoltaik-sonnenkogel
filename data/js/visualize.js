@@ -5,8 +5,9 @@ const plotData = {
     dach: {name: 'Dach', color: '#0072BD', hidden: false, legendOrder: 0},
     balkon: {name: 'Balkon', color: '#EDB120', hidden: false, legendOrder: 1},
     verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
-    bezug: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
+    bezugReal: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
     einspeisung: {name: 'Einspeisung', color: '#77AC30', hidden: false, legendOrder: 4},
+    bezug: {name: 'Netto', color: '#4DBEEE', hidden: true, legendOrder: 4},
     alpha: '75'
 }
 
@@ -118,8 +119,9 @@ async function showLiveChart() {
         'dach': {pos: 0},
         'balkon': {pos: 0},
         'verbrauch': {pos: 1},
-        'bezug': {pos: 2},
+        'bezugReal': {pos: 2},
         'einspeisung': {pos: 2},
+        'bezug': {pos: 2},
     }
     const types = Object.keys(typesMap)
 
@@ -133,11 +135,13 @@ async function showLiveChart() {
     const data = {
         labels: ["Produktion", "Verbrauch", "Bezug"],
         datasets:
-            types.map(type => {
-                const data_i = [0, 0, 0];
-                data_i[typesMap[type].pos] = typesMap[type].data.y
-                return getBasicDatasetObject(type, data_i)
-            })
+            // don't show 'bezug' here
+            types.filter(type => type !== 'bezug')
+                .map(type => {
+                    const data_i = [0, 0, 0];
+                    data_i[typesMap[type].pos] = typesMap[type].data.y
+                    return getBasicDatasetObject(type, data_i)
+                })
     };
     const chartId = 'liveChart';
     new Chart(document.getElementById(chartId), {
@@ -241,7 +245,7 @@ async function updateTodayData(date) {
     addPlaceholder(document.getElementById(chartId).parentElement)
 
     // gather data
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
     const data = {
         labels: [],
         datasets:
@@ -379,13 +383,13 @@ async function showWeekChart() {
             }
         }
     });
-    await updateWeekData(getDay(-4), getDay(0))
+    await updateWeekData(getDay(-3), getDay(0))
 
 }
 
 async function updateWeekData(dateFrom, dateTo) {
     const chartId = 'weekChart'
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
 
     // gather dates
     dateFrom = new Date(dateFrom)
@@ -501,13 +505,12 @@ async function showMonthData() {
             }
         }
     )
-
     await updateMonthData(getDay(-29), getDay(0))
 }
 
 async function updateMonthData(dateFrom, dateTo) {
     const chartId = 'monthChart'
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
 
     // gather dates
     dateFrom = new Date(dateFrom)
@@ -521,7 +524,7 @@ async function updateMonthData(dateFrom, dateTo) {
                 getTimeDatasetObject(type,
                     (await Promise.all(dateArray.map(date => getData(type, formatDate(date)))))
                         .map(data_i => {
-                            return {x: `${formatDate(new Date(data_i[data_i.length-1].x))} 00:00`, y: integrateData(data_i)}
+                            return {x: `${formatDate(new Date(data_i[data_i.length - 1].x))} 00:00`, y: integrateData(data_i)}
                         })
                 ))
             )
