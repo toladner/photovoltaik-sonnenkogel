@@ -80,32 +80,6 @@ function getTimeDatasetObject(type, data) {
     return dataset
 }
 
-function getZoomOptions() {
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-    return {
-        zoom: {
-            wheel: {
-                enabled: true,
-            },
-            drag: {
-                enabled: false
-            },
-            pinch: {
-                enabled: true
-            },
-            mode: 'x',
-        },
-        pan: {
-            enabled: true,
-            mode: 'x'
-        },
-        limits: {
-            x: {max: endOfDay}
-        }
-    }
-}
-
 function getLegendSorting(a, b, data) {
     if (typeof a === "undefined" || typeof b === "undefined") {
         return 0
@@ -226,7 +200,6 @@ async function showTodayChart() {
                 }
             },
             plugins: {
-                // zoom: getZoomOptions()
                 legend: {
                     labels: {
                         sort: getLegendSorting()
@@ -333,27 +306,11 @@ async function updateToday(which) {
 
 async function showWeekChart() {
     logSection('[CHART] Showing Week..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
 
-    // gather data
-    const data = {
-        labels: [],
-        datasets:
-            await Promise.all(
-                types.map(async (type) => {
-                        return getTimeDatasetObject(
-                            type,
-                            await Promise.all(range(-6, 0).map(i => getData(type, getDay(i))))
-                                .then(results => results.flat()))
-                    }
-                )
-            )
-    };
     // plot chat
     const chartId = 'weekChart'
     new Chart(document.getElementById(chartId), {
         type: 'line',
-        data: data,
         options: {
             responsive: true,
             aspectRatio: getAspectRatio('tall'),
@@ -363,7 +320,33 @@ async function showWeekChart() {
                 }
             },
             plugins: {
-                zoom: getZoomOptions(),
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        drag: {
+                            enabled: false
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                        onZoom: ({chart}) => {
+                            updateWeekData(chart.scales.x.min, chart.scales.x.max)
+                        }
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                        onPan: ({chart}) => {
+                            updateWeekData(chart.scales.x.min, chart.scales.x.max)
+                        }
+                    },
+                    limits: {
+                        x: {max: getEndOfDate(new Date())}
+                    }
+                },
                 legend: {
                     labels: {
                         sort: getLegendSorting()
@@ -373,13 +356,9 @@ async function showWeekChart() {
             scales: {
                 x: {
                     type: 'time',
-                    min: getDay(-6),
                     max: `${getDay(0)} 23:59:59`,
                     time: {
                         unit: "day",
-                        displayFormats: {
-                            day: 'dd. MMM'
-                        }
                     },
                     ticks: {
                         maxRotation: 45,
@@ -400,10 +379,46 @@ async function showWeekChart() {
             }
         }
     });
+    await updateWeekData(getDay(-4), getDay(0))
+
+}
+
+async function updateWeekData(dateFrom, dateTo) {
+    const chartId = 'weekChart'
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+
+    // gather dates
+    dateFrom = new Date(dateFrom)
+    dateTo = new Date(dateTo)
+    const dateArray = getDateArray(dateFrom, dateTo)
+
+    // gather data
+    const data = {
+        labels: [],
+        datasets:
+            await Promise.all(
+                types.map(async (type) => {
+                        return getTimeDatasetObject(
+                            type,
+                            await Promise.all(dateArray.map(date => getData(type, formatDate(date))))
+                                .then(results => results.flat()))
+                    }
+                )
+            )
+    };
+
+    let chart = Chart.getChart(chartId);
+    if (chart.data.datasets.length > 0) {
+        // correctly set visible/hidden labels
+        range(chart.data.datasets.length - 1).forEach(i => data.datasets[i].hidden = !chart._metasets[i].visible)
+    }
+    chart.data = data;
+    chart.update('none'); // no animation
 
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
     // update statistics
+    document.querySelector('#weekData #headline').innerText = `${dateArray.length} Tage`
     types.forEach(
         type =>
             overwritePlaceHolder(
@@ -418,39 +433,27 @@ async function showWeekChart() {
 
 async function showMonthData() {
     logSection('[CHART] Showing Month..')
-    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
     const N = 30;
     const days = range(-(N - 1), 0);
 
-    // gather data
-    const data = {
-        labels: days.map(i => getDay(i, 'month-day')),
-        datasets:
-            await Promise.all(types.map(async type =>
-                getBasicDatasetObject(type,
-                    (await Promise.all(
-                        days.map(i =>
-                            getData(type, getDay(i))
-                        )
-                    )).map(data_i => integrateData(data_i)),
-                    plotData[type].hidden
-                ))
-            )
-
-    };
     // plot chart
     const chartId = 'monthChart';
     new Chart(document.getElementById(chartId), {
             type: 'bar',
-            data: data,
             options: {
                 responsive: true,
                 aspectRatio: getAspectRatio('tall'),
                 scales: {
                     x: {
+                        type: 'time',
+                        max: `${getDay(0)} 00:00`,
+                        time: {
+                            unit: "day",
+                        },
                         ticks: {
                             maxRotation: 45,
                             minRotation: 45,
+                            callback: (value) => formatDate(new Date(value), "month-day")
                         }
                     },
                     y: {
@@ -462,6 +465,33 @@ async function showMonthData() {
                     }
                 },
                 plugins: {
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            drag: {
+                                enabled: false
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x',
+                            onZoom: ({chart}) => {
+                                updateMonthData(chart.scales.x.min, chart.scales.x.max)
+                            }
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            onPan: ({chart}) => {
+                                updateMonthData(chart.scales.x.min, chart.scales.x.max)
+                            }
+                        },
+                        limits: {
+                            x: {max: getEndOfDate(new Date())}
+                        }
+                    },
                     legend: {
                         labels: {
                             sort: getLegendSorting()
@@ -472,15 +502,49 @@ async function showMonthData() {
         }
     )
 
+    await updateMonthData(getDay(-29), getDay(0))
+}
+
+async function updateMonthData(dateFrom, dateTo) {
+    const chartId = 'monthChart'
+    const types = ['balkon', 'dach', 'verbrauch', 'bezug', 'einspeisung']
+
+    // gather dates
+    dateFrom = new Date(dateFrom)
+    dateTo = new Date(dateTo)
+    const dateArray = getDateArray(dateFrom, dateTo)
+
+    const data = {
+        labels: [],
+        datasets:
+            await Promise.all(types.map(async type =>
+                getTimeDatasetObject(type,
+                    (await Promise.all(dateArray.map(date => getData(type, formatDate(date)))))
+                        .map(data_i => {
+                            return {x: `${formatDate(new Date(data_i[data_i.length-1].x))} 00:00`, y: integrateData(data_i)}
+                        })
+                ))
+            )
+    };
+
+    let chart = Chart.getChart(chartId);
+    if (chart.data.datasets.length > 0) {
+        // correctly set visible/hidden labels
+        range(chart.data.datasets.length - 1).forEach(i => data.datasets[i].hidden = !chart._metasets[i].visible)
+    }
+    chart.data = data;
+    chart.update('none'); // no animation
+
     // update placeholders
     removePlaceholder(document.getElementById(chartId).parentElement)
     // update statistics
+    document.querySelector('#monthData #headline').innerText = `${dateArray.length} Tage`
     types.forEach(
         type =>
             overwritePlaceHolder(
                 'monthData',
                 type,
-                (data.datasets[types.indexOf(type)].data).reduce((acc, data_i) => acc + data_i, 0),
+                (data.datasets[types.indexOf(type)].data).reduce((acc, data_i) => acc + data_i.y, 0),
                 'kWh'
             )
     )

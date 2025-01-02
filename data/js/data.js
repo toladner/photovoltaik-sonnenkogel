@@ -4,14 +4,17 @@ async function sleep(ms) {
     await new Promise(r => setTimeout(r, ms));
 }
 
+function getRequest(type, requestDay) {
+    return type === "balkon" || type === "einspeisung" ? requestDay : requestDay.substring(0, 7);
+}
+
 function isDataRetrieved(type, requestDay) {
-    let request = type === "balkon" ? requestDay : requestDay.substring(0, 7);
-    return request in DATA[type];
+    return getRequest(type, requestDay) in DATA[type];
 }
 
 async function isDataAvailable(type, requestDay) {
     // build request
-    let request = type === "balkon" ? requestDay : requestDay.substring(0, 7);
+    let request = getRequest(type, requestDay)
 
     // wait until data is available
     while (!(DATA[type][request].available)) {
@@ -78,12 +81,16 @@ async function getData(type, requestDay) {
     return DATA[type][requestDay].value
 }
 
+function getDummyData(requestDate) {
+    return [{x: `${formatDate(requestDate)} 00:00`, y: 0}]
+}
+
 async function retrieveDataBalkon(requestDay) {
     // only available from 2024-12-16
     const firstDate = new Date('2024-12-16')
     const requestDate = new Date(requestDay)
     if (firstDate.getTime() > requestDate.getTime()) {
-        return []
+        return getDummyData(requestDate)
     }
 
     // init
@@ -106,12 +113,15 @@ async function retrieveDataBalkon(requestDay) {
         }
     })
     const json = await response.json();
-    const rawData = json.data[0].data_list.map(element => {
+    let rawData = json.data[0].data_list.map(element => {
         return {
             x: `${requestDay} ${element.date}`,
             y: element.pv_power
         }
     })
+    if (rawData.length === 0) {
+        rawData = getDummyData(requestDate)
+    }
 
     deleteStatus(statusId)
     return rawData

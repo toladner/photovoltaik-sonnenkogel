@@ -66,4 +66,22 @@ function formatDate(date, format = "iso") {
     }
 }
 
+function getEndOfDate(date) {
+    date.setHours(23, 59, 59, 999);
+    return date
+}
+
+function getDateArray(dateFrom, dateTo) {
+    var dateArray = [];
+    let dateCurrent = dateFrom
+    while (dateCurrent.getTime() <= dateTo.getTime()) {
+        // add to array
+        dateArray.push(structuredClone(dateCurrent))
+
+        // add one day
+        dateCurrent.setDate(dateCurrent.getDate() + 1);
+    }
+    return dateArray
+}
+
 
