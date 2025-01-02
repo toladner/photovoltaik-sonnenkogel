@@ -572,7 +572,8 @@ async function showCharts() {
                 .then(value => showWeekChart()          // 4. Week
                     .then(value => showMonthData()      // 5. Month
                         .then(value => {                // Done!
-                            console.log('[CHART] Completed.')
+                            logSection('[CHART] Completed.')
+                            logSection('')
                         }))
                 )
             )

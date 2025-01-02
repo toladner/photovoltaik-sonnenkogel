@@ -8,7 +8,7 @@ async function getCredentials() {
         // get encrypted credentials
         console.log("[CREDENTIALS] Retrieving..")
         const statusId = updateStatus("Login..")
-        const response = await fetch('./data/credentials/credentials.encrypted');
+        const response = await fetchRetry('./data/credentials/credentials.encrypted');
         const encryptedCreds = await response.text();
 
         // read key
@@ -17,7 +17,7 @@ async function getCredentials() {
         const key = params.get('pasteid');
 
         // test encryption
-        // const responsePlain = await fetch('./js/data/credentials.raw');
+        // const responsePlain = await fetchRetry('./js/data/credentials.raw');
         // const plainCreds = await responsePlain.text();
         // const encryptedTemp = await CryptoJS.AES.encrypt(plainCreds, key);
         // console.log(encryptedTemp.toString())
@@ -32,7 +32,7 @@ async function getCredentials() {
 
         // obtain s-mile token
         console.log('[CREDENTIALS] Obtaining s-mile token..')
-        const responseSmile = await fetch(
+        const responseSmile = await fetchRetry(
             "https://global.hoymiles.com/platform/api/gateway/iam/auth_login",
             {
                 headers: {'Content-Type': 'application/json;charset=UTF-8'},

@@ -109,7 +109,7 @@ async function retrieveDataBalkon(requestDay) {
     const credentials = await getCredentials()
     const statusId = updateStatus(`Loading ${requestDay}..`)
 
-    const response = await fetch("https://neapi.hoymiles.com/pvm-report/api/0/station/report/select_power_by_station", {
+    const response = await fetchRetry("https://neapi.hoymiles.com/pvm-report/api/0/station/report/select_power_by_station", {
         method: "POST",
         body: JSON.stringify({
             sid_list: [7446940],
@@ -145,14 +145,14 @@ async function retrieveDataDach(requestMonth) {
     const statusId = updateStatus(`Loading ${requestMonth}..`)
 
     // call dns
-    const responseDNS = await fetch("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
+    const responseDNS = await fetchRetry("https://dns.loxonecloud.com/504F94A0FD08", {redirect: 'follow'})
 
     // fetch data from real url
     const url = `${responseDNS.url}stats/18cefec1-017c-47f3-ffffed57184a04d2.${requestMonth.replace('-', '')}.xml`
     const headers = new Headers({
         'Authorization': `Basic ${btoa(`${credentials.loxone.username}:${credentials.loxone.password}`)}`
     });
-    const response = await fetch(url, {headers: headers});
+    const response = await fetchRetry(url, {headers: headers});
     const xmlText = await response.text()
 
     // init data struct

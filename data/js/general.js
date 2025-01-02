@@ -1,15 +1,18 @@
 // init statusManager
 statusManager = {maxId: 0, currId: 0, queuedIds: {}}
 
-function updateStatus(status, id = statusManager.maxId + 1) {
+function updateStatus(msg, id = statusManager.maxId + 1) {
     // save status
-    statusManager.queuedIds[id] = status
+    statusManager.queuedIds[id] = msg
     statusManager.currId = id;
     statusManager.maxId = Math.max(id, statusManager.maxId)
 
+    // determine color
+    const textClass = msg.includes('ERROR') ? 'text-danger' : 'text-secondary'
+
     // display status
     const spinner = "<div class=\"spinner-grow spinner-grow-sm\" role=\"status\"><span class=\"visually-hidden\">Loading...</span></div>"
-    document.getElementById('status').innerHTML = `${status}&emsp;${spinner}`
+    document.getElementById('status').innerHTML = `<span class="${textClass}">${msg}&emsp;${spinner}</span>`
 
     return id
 }
@@ -83,6 +86,31 @@ function getDateArray(dateFrom, dateTo) {
         dateCurrent.setDate(dateCurrent.getDate() + 1);
     }
     return dateArray
+}
+
+async function fetchRetry(url, params = {}, tries = 3) {
+    // fetch
+    return await fetch(url, params)
+        .then(async response => {
+            // was fetch ok?
+            if (!response.ok) {
+                if (tries <= 0) {
+                    // out of tries
+                    throw new Error(await response.text())
+                } else {
+                    // retry
+                    tries -= 1;
+                    console.log(`[FETCH] Retry requesting url='${url}', tries=${tries}`)
+                    response = await fetchRetry(url, params, tries)
+                }
+            }
+            return response
+        })
+        .catch(async error => {
+            const msg = `ERROR: Loading '${url}'. ${await error.message}`
+            updateStatus(msg)
+            throw error
+        })
 }
 
 
