@@ -74,7 +74,8 @@ function getEndOfDate(date) {
 function getDateArray(dateFrom, dateTo) {
     var dateArray = [];
     let dateCurrent = dateFrom
-    while (dateCurrent.getTime() <= dateTo.getTime()) {
+    dateTo = getEndOfDate(dateTo)
+    while (dateCurrent.getTime() <= dateTo.getTime() + 1000) {
         // add to array
         dateArray.push(structuredClone(dateCurrent))
 

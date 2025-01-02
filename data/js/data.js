@@ -5,7 +5,7 @@ async function sleep(ms) {
 }
 
 function getRequest(type, requestDay) {
-    return type === "balkon" || type === "einspeisung" ? requestDay : requestDay.substring(0, 7);
+    return (["balkon", "einspeisung", "bezugReal"].indexOf(type) > -1) ? requestDay : requestDay.substring(0, 7);
 }
 
 function isDataRetrieved(type, requestDay) {
