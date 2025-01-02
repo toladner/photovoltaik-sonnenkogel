@@ -60,7 +60,7 @@ function getDay(deltaDay = 0, format = 'iso', today = new Date()) {
 function formatDate(date, format = "iso") {
     switch (format) {
         case "month-day":
-            return date.toLocaleDateString('de-DE', {month: 'short', day: '2-digit', year: "2-digit"})
+            return date.toLocaleDateString('de-AT', {month: 'short', day: '2-digit', year: "2-digit"})
         default: // "iso"
             return date.toISOString().slice(0, 10);
     }

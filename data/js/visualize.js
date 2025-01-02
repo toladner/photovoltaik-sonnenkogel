@@ -45,7 +45,7 @@ function enableButtons(which, flag) {
     // gather buttons
     let buttons = [];
     if (which === 'today' || which === 'all') {
-        buttons.push("todayDataPrev", "todayDataNext",'todayPicker')
+        buttons.push("todayDataPrev", "todayDataNext", 'todayPicker')
     }
 
     // enable/disable buttons
