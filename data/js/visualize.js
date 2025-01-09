@@ -133,7 +133,8 @@ async function showLiveChart() {
     )
 
     const data = {
-        labels: ["Produktion", "Verbrauch", "Bezug"],
+        labels: ["Produktion", "Verbrauch",
+            typesMap['einspeisung'].data.y > 0 ? plotData.einspeisung.name : plotData.bezugReal.name],
         datasets:
             // don't show 'bezug' here
             types.filter(type => type !== 'bezug')
