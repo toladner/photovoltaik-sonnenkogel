@@ -38,8 +38,8 @@ function getNearestBalkonData(data, timestamp) {
     // Convert target timestamp to Date object
     const targetTime = new Date(timestamp);
 
-    // Define the grace period (16 minutes in milliseconds)
-    const gracePeriod = 16 * 60 * 1000;
+    // Define the grace period (31 minutes in milliseconds)
+    const gracePeriod = 31 * 60 * 1000;
 
     // Handle timestamps before earliest data point
     if (targetTime < cleanData[0].x) {
@@ -226,6 +226,22 @@ async function retrieveDataBalkon(requestDay) {
     })
     if (rawData.length === 0) {
         rawData = getDummyData(requestDate)
+    } else {
+        // Check if the last entry is more than 15 minutes old
+        const now = new Date();
+        const lastEntryTime = new Date(rawData[rawData.length - 1].x);
+        const timeDifference = now - lastEntryTime;
+
+        // Define the grace period (31 minutes in milliseconds)
+        const gracePeriod = 31 * 60 * 1000;
+        if (timeDifference > gracePeriod) {
+            // Add a zero entry with the current time
+            const currentTimeString = now.toISOString().slice(0, 16).replace('T', ' ');
+            rawData.push({
+                x: currentTimeString,
+                y: '0'
+            });
+        }
     }
 
     deleteStatus(statusId)
