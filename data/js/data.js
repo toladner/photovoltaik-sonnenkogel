@@ -1,4 +1,4 @@
-const DATA = {dach: {}, balkon: {}, verbrauch: {}, bezugReal: {}, einspeisung: {}, bezug: {}}
+const DATA = {dach: {}, balkon: {}, verbrauch: {}, verbrauchReal: {}, bezugReal: {}, einspeisung: {}, bezug: {}}
 
 async function sleep(ms) {
     await new Promise(r => setTimeout(r, ms));
@@ -21,6 +21,83 @@ async function isDataAvailable(type, requestDay) {
         console.log(`[DATA] ${type} (${request}) - Awaiting availability..`)
         await sleep(1000)
     }
+}
+
+function getNearestBalkonData(data, timestamp) {
+    // Return 0 if the data array is empty
+    if (!data || data.length === 0) {
+        return 0;
+    }
+
+    // Clean and prepare data
+    const cleanData = data.map(item => ({
+        x: new Date(item.x),
+        y: parseFloat(item.y)
+    })).sort((a, b) => a.x - b.x);
+
+    // Convert target timestamp to Date object
+    const targetTime = new Date(timestamp);
+
+    // Define the grace period (16 minutes in milliseconds)
+    const gracePeriod = 16 * 60 * 1000;
+
+    // Handle timestamps before earliest data point
+    if (targetTime < cleanData[0].x) {
+        const timeDiff = cleanData[0].x - targetTime;
+
+        // If within grace period, return first value
+        if (timeDiff <= gracePeriod) {
+            return cleanData[0].y;
+        } else {
+            // If outside grace period, return 0
+            return 0;
+        }
+    }
+
+    // Handle timestamps after latest data point
+    if (targetTime > cleanData[cleanData.length - 1].x) {
+        const timeDiff = targetTime - cleanData[cleanData.length - 1].x;
+
+        // If within grace period, return last value
+        if (timeDiff <= gracePeriod) {
+            return cleanData[cleanData.length - 1].y;
+        } else {
+            // If outside grace period, return 0
+            return 0;
+        }
+    }
+
+    // Find the two data points to interpolate between
+    let beforeIndex = 0;
+    for (let i = 0; i < cleanData.length - 1; i++) {
+        if (targetTime >= cleanData[i].x && targetTime <= cleanData[i + 1].x) {
+            beforeIndex = i;
+            break;
+        }
+    }
+
+    const before = cleanData[beforeIndex];
+    const after = cleanData[beforeIndex + 1];
+
+    // If exact match, return the exact value
+    if (targetTime.getTime() === before.x.getTime()) {
+        return before.y;
+    }
+    if (targetTime.getTime() === after.x.getTime()) {
+        return after.y;
+    }
+
+    // Calculate time difference in milliseconds
+    const timeDiff = after.x.getTime() - before.x.getTime();
+    const targetDiff = targetTime.getTime() - before.x.getTime();
+
+    // Calculate interpolation factor (0 to 1)
+    const factor = targetDiff / timeDiff;
+
+    // Perform linear interpolation
+    const interpolatedValue = before.y + factor * (after.y - before.y);
+
+    return interpolatedValue;
 }
 
 async function getData(type, requestDay) {
@@ -57,16 +134,32 @@ async function getData(type, requestDay) {
         DATA[type][requestDay] = {value: rawData, available: true};
 
     } else if (type === "bezugReal") {
-            // make requested day unavailable
-            DATA[type][requestDay] = {available: false};
-            // request bezug data
-            const bezugData = await getData('bezug', requestDay)
-            // only count negative numbers
-            const rawData = bezugData.map(data_i => {
-                return {x: data_i.x, y: Math.max(0, data_i.y)}
-            })
-            // save data
-            DATA[type][requestDay] = {value: rawData, available: true};
+        // make requested day unavailable
+        DATA[type][requestDay] = {available: false};
+        // request bezug data
+        const bezugData = await getData('bezug', requestDay)
+        // only count negative numbers
+        const rawData = bezugData.map(data_i => {
+            return {x: data_i.x, y: Math.max(0, data_i.y)}
+        })
+        // save data
+        DATA[type][requestDay] = {value: rawData, available: true};
+    } else if (type === "verbrauchReal") {// make requested day unavailable
+        // make requested day unavailable
+        DATA[type][requestDay] = {available: false};
+        // request all required data data
+        const verbrauchData = await getData('bezug', requestDay)
+        const dachData = await getData('dach', requestDay)
+        const balkonData = await getData('balkon', requestDay)
+
+        // compute real verbrauch
+        const rawData = range(verbrauchData.length-1)
+            .map(i => {return {
+                x: verbrauchData[i].x,
+                y: dachData[i].y + getNearestBalkonData(balkonData, verbrauchData[i].x) + verbrauchData[i].y
+            }})
+        // save data
+        DATA[type][requestDay] = {value: rawData, available: true};
 
     } else {
         // make requested day/month unavailable

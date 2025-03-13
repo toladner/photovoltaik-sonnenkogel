@@ -4,10 +4,10 @@
 const plotData = {
     dach: {name: 'Dach', color: '#0072BD', hidden: false, legendOrder: 0},
     balkon: {name: 'Balkon', color: '#EDB120', hidden: false, legendOrder: 1},
-    verbrauch: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
+    verbrauchReal: {name: 'Verbrauch', color: '#D95319', hidden: true, legendOrder: 2},
     bezugReal: {name: 'Bezug', color: '#7E2F8E', hidden: true, legendOrder: 3},
     einspeisung: {name: 'Einspeisung', color: '#77AC30', hidden: false, legendOrder: 4},
-    bezug: {name: 'Netto', color: '#4DBEEE', hidden: true, legendOrder: 4},
+    bezug: {name: 'Netto', color: '#4DBEEE', hidden: true, legendOrder: 5},
     alpha: '75'
 }
 
@@ -118,7 +118,7 @@ async function showLiveChart() {
     const typesMap = {
         'dach': {pos: 0},
         'balkon': {pos: 0},
-        'verbrauch': {pos: 1},
+        'verbrauchReal': {pos: 1},
         'bezugReal': {pos: 2},
         'einspeisung': {pos: 2},
         'bezug': {pos: 2},
@@ -246,7 +246,7 @@ async function updateTodayData(date) {
     addPlaceholder(document.getElementById(chartId).parentElement)
 
     // gather data
-    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauchReal', 'bezugReal', 'einspeisung', 'bezug']
     const data = {
         labels: [],
         datasets:
@@ -390,7 +390,7 @@ async function showWeekChart() {
 
 async function updateWeekData(dateFrom, dateTo) {
     const chartId = 'weekChart'
-    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauchReal', 'bezugReal', 'einspeisung', 'bezug']
 
     // gather dates
     dateFrom = new Date(dateFrom)
@@ -511,7 +511,7 @@ async function showMonthData() {
 
 async function updateMonthData(dateFrom, dateTo) {
     const chartId = 'monthChart'
-    const types = ['balkon', 'dach', 'verbrauch', 'bezugReal', 'einspeisung', 'bezug']
+    const types = ['balkon', 'dach', 'verbrauchReal', 'bezugReal', 'einspeisung', 'bezug']
 
     // gather dates
     dateFrom = new Date(dateFrom)
