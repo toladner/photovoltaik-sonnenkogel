@@ -506,7 +506,7 @@ async function showMonthData() {
             }
         }
     )
-    await updateMonthData(getDay(-29), getDay(0))
+    await updateMonthData(getDay(-29), getDay(1))
 }
 
 async function updateMonthData(dateFrom, dateTo) {
