@@ -144,7 +144,7 @@ async function getData(type, requestDay) {
         })
         // save data
         DATA[type][requestDay] = {value: rawData, available: true};
-    } else if (type === "verbrauchReal") {// make requested day unavailable
+    } else if (type === "verbrauchReal") {
         // make requested day unavailable
         DATA[type][requestDay] = {available: false};
         // request all required data data
@@ -156,7 +156,7 @@ async function getData(type, requestDay) {
         const rawData = range(verbrauchData.length-1)
             .map(i => {return {
                 x: verbrauchData[i].x,
-                y: dachData[i].y + getNearestBalkonData(balkonData, verbrauchData[i].x) + verbrauchData[i].y
+                y: Math.max(0, dachData[i].y + getNearestBalkonData(balkonData, verbrauchData[i].x) + verbrauchData[i].y)
             }})
         // save data
         DATA[type][requestDay] = {value: rawData, available: true};
