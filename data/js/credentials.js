@@ -33,13 +33,13 @@ async function getCredentials() {
         // obtain s-mile token
         console.log('[CREDENTIALS] Obtaining s-mile token..')
         const responseSmile = await fetchRetry(
-            "https://global.hoymiles.com/platform/api/gateway/iam/auth_login",
+            "https://neapi.hoymiles.com/iam/pub/0/auth/login",
             {
                 headers: {'Content-Type': 'application/json;charset=UTF-8'},
-                method: "POST", body: JSON.stringify({body: {
+                method: "POST", body: JSON.stringify({
                     user_name: credentials.value.smile.username,
                     password: credentials.value.smile.password
-                }, LOAD: {loading: true}, WAITING_PROMISE: true, ERROR_BACK: true})
+                })
             }
         )
         const jsonSmile = await responseSmile.json()
