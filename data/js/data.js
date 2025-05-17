@@ -107,7 +107,14 @@ async function getData(type, requestDay) {
         await isDataAvailable(type, requestDay)
 
         // return requested data
-        return DATA[type][requestDay].value;
+        try {
+            return DATA[type][requestDay].value;
+        } catch (e) {
+            // usually happens for future dates
+            console.log(`[ERROR] Unable to return DATA for type=${type} and day=${requestDay}: ${e.message}`)
+            // returning 0 for these
+            return [{x: requestDay, y: 0}]
+        }
     }
 
     console.log(`[DATA] ${type} (${requestDay}) - Requesting data..`)
